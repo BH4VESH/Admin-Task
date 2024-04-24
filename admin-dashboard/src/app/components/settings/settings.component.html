@@ -1,0 +1,30 @@
+<div class="container ">
+  <div class="row  d-flex align-items-center justify-content-center">
+    <div class="navbar navbar-dark bg-secondary mt-5 d-flex align-items-center justify-content-center">
+      <h1>Setting</h1>
+    </div>
+    <div class="container">
+      <h1 class="display-5 mt-5">Set the seconds for the driver to accept the request.</h1>
+      <div class="input-group ps-5 pe-5">
+
+        <select class="form-select" id="inputGroupSelectSeconds" aria-label="Select seconds"
+          [(ngModel)]="selectedSeconds">
+          <option [value]="undefined" disabled selected>Select seconds</option>
+          <option *ngFor="let second of secondsOptions" [value]="second">{{ second }}</option>
+        </select>
+      </div>
+
+      <h1 class="display-5 mt-5">Set how many stops users can add between both locations.</h1>
+      <div class="input-group ps-5 pe-5">
+        <select class="form-select" id="inputGroupSelectStopCount" aria-label="Select stop count"
+          [(ngModel)]="selectedStopCount">
+          <option [value]="undefined" disabled selected>Select stop count</option>
+          <option *ngFor="let stop of stopOptions" [value]="stop">{{ stop }}</option>
+        </select>
+      </div>
+      <div class="d-grid col-6 mx-auto mt-5">
+        <button type="submit" class="btn btn-outline-info" (click)="saveSetting()">Save Setting</button>
+      </div>
+    </div>
+  </div>
+</div>
