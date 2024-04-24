@@ -12,6 +12,7 @@ import { Token } from '@angular/compiler';
 })
 export class AuthService {
   private baseUrl = 'http://localhost:3000';
+  private isAuthenticated: boolean = false;
 
   constructor(private http: HttpClient,private router: Router,private bnIdle: BnNgIdleService,private toster: ToastrService) {}
 
@@ -20,6 +21,7 @@ export class AuthService {
       tap(response => {
         const token = response?.token;
         if (token) {
+          this.isAuthenticated = true;
           localStorage.setItem('token', token);
           this.toster.success("User login successful")
         } else {
@@ -31,6 +33,7 @@ export class AuthService {
   }
 
   logout(): void {
+    this.isAuthenticated = false;
     localStorage.removeItem('token');
     this.router.navigate(["login"]);
   }
@@ -49,6 +52,10 @@ export class AuthService {
   }
   stopTimer(){
     this.bnIdle.stopTimer()
+  }
+
+  isAuthenticatedFn(): boolean {
+    return this.isAuthenticated;
   }
 
 }
