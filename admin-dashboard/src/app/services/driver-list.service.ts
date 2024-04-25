@@ -2,6 +2,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, Subject, catchError, tap, throwError } from 'rxjs';
+import {Driver, DriverServiceType, FatchDriver, UserSearchResponse} from '../models/driver';
 
 @Injectable({
   providedIn: 'root'
@@ -13,12 +14,12 @@ export class DriverListService {
 
   constructor(private http: HttpClient) { }
 
-  getDriver(page: number, limit: number): Observable<any> {
-    return this.http.get<any>(`${this.baseUrl}/get?page=${page}&limit=${limit}`);
+  getDriver(page: number, limit: number): Observable<FatchDriver> {
+    return this.http.get<FatchDriver>(`${this.baseUrl}/get?page=${page}&limit=${limit}`);
   }
 
-  getSortDriver(page: number, limit: number, sortBy: string, sortOrder: string): Observable<any> {
-    return this.http.get<any>(`${this.baseUrl}/getshort?page=${page}&limit=${limit}&sortBy=${sortBy}&sortOrder=${sortOrder}`).pipe(
+  getSortDriver(page: number, limit: number, sortBy: string, sortOrder: string): Observable<FatchDriver> {
+    return this.http.get<FatchDriver>(`${this.baseUrl}/getshort?page=${page}&limit=${limit}&sortBy=${sortBy}&sortOrder=${sortOrder}`).pipe(
       catchError(error => {
         console.error('Error fetching users:', error);
         return throwError('Failed to fetch users');
@@ -27,7 +28,7 @@ export class DriverListService {
   }
   
 
-  addDriver(countryId:string,cityId:string,username: string, email: string, phone: string, profilePic: File): Observable<any> {
+  addDriver(countryId:string,cityId:string,username: string, email: string, phone: string, profilePic: File): Observable<Driver> {
     const formData = new FormData();
     formData.append('profilePic', profilePic);
     formData.append('username', username);
@@ -36,17 +37,17 @@ export class DriverListService {
     formData.append('countryId', countryId);
     formData.append('phone', phone);
     
-    return this.http.post(this.baseUrl + '/add', formData).pipe(
+    return this.http.post<Driver>(this.baseUrl + '/add', formData).pipe(
       tap(() => this.userAdded.next())
     );
   }
 
-  deleteDriver(driverId: string): Observable<any> {
+  deleteDriver(driverId: string): Observable<Driver> {
     const url = `${this.baseUrl}/delete/${driverId}`;
-    return this.http.delete<any>(url);
+    return this.http.delete<Driver>(url);
   }
 
-  editDriver(driverId: string, username: string, email: string, countryId: string,cityId:string, phone: string, profilePic: File | null): Observable<any> {
+  editDriver(driverId: string, username: string, email: string, countryId: string,cityId:string, phone: string, profilePic: File | null): Observable<Driver> {
     const formData = new FormData();
     formData.append('username', username);
     formData.append('email', email);
@@ -57,27 +58,27 @@ export class DriverListService {
       formData.append('profilePic', profilePic);
     }
     const url = `${this.baseUrl}/edit/${driverId}`;
-    return this.http.put<any>(`${this.baseUrl}/edit/${driverId}`, formData);
+    return this.http.put<Driver>(`${this.baseUrl}/edit/${driverId}`, formData);
   }
 
   
-  searchDriver(query: string, page: number, pageSize: number): Observable<any> {
+  searchDriver(query: string, page: number, pageSize: number): Observable<UserSearchResponse> {
     let params = new HttpParams();
     params = params.append('query', query);
     params = params.append('page', page.toString());
     params = params.append('pageSize', pageSize.toString());
     
-    return this.http.get<any>(`${this.baseUrl}/search`, { params });
+    return this.http.get<UserSearchResponse>(`${this.baseUrl}/search`, { params });
   }
 
-  addService(driverId: string, serviceId: string): Observable<any> {
+  addService(driverId: string, serviceId: string): Observable<DriverServiceType> {
     const url = `${this.baseUrl}/service/${driverId}`;
     const body = { serviceId }; 
-    return this.http.put<any>(url, body); 
+    return this.http.put<DriverServiceType>(url, body); 
   }
-  addStatus(driverId: string): Observable<any> {
+  addStatus(driverId: string): Observable<DriverServiceType> {
     const url = `${this.baseUrl}/status/${driverId}`;
-    return this.http.get<any>(url).pipe(
+    return this.http.get<DriverServiceType>(url).pipe(
       catchError((error) => {
         console.error(error);
         return throwError('Server error');

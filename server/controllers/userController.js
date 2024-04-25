@@ -1,7 +1,8 @@
-const User = require('../models/user2');
-const stripe = require('stripe')('sk_test_51P3Ws4SDDc6YrodmNnWOObOHnAUwqFidAUne2oZp3pq4vKb4GZF9Yj475gFGNGuBjyFzzp9bk3cgVQ5ESOcNTRcd00il7mgEFW');
+const User = require('../models/userModel');
 const deleteImage = require('../middleware/deleteImage');
-const country = require('../models/country');
+const country = require('../models/countryModel');
+const dotenv=require('dotenv').config();
+const stripe = require('stripe')(process.env.stripeSecretKey);
 
 exports.createUser = async (req, res) => {
   try {

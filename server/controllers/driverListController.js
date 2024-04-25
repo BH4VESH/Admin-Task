@@ -1,9 +1,5 @@
-const Driver = require('../models/driver-list');
+const Driver = require('../models/driverListModel');
 const deleteImage = require('../middleware/deleteImage');
-
-
-
-
 exports.createDriver = async (req, res) => {
   try {
 
@@ -75,16 +71,12 @@ exports.createDriver = async (req, res) => {
         }
       ]
     )
-
-
-
     console.log(savedDriver[0])
     res.status(201).json({ success: true, message: "Driver Added Successfully", Driver: savedDriver[0] });
   } catch (err) {
     res.status(400).json({ success: false, message: err.message });
   }
 };
-
 
 // //////////////////////////////////////
 exports.getDriver = async (req, res) => {
@@ -220,8 +212,6 @@ exports.deleteDriver = async (req, res) => {
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
-
-
 // //////////////////////////update logic
 exports.updateDriver = async (req, res) => {
 
@@ -258,9 +248,6 @@ exports.updateDriver = async (req, res) => {
       }
       return res.json({ success: false, message: errorMessage });
     }
-
-    // console.log(countryId)
-    // console.log(cityId)
 
     const oldUser = await Driver.findById(DriverId);
 
@@ -320,8 +307,7 @@ exports.updateDriver = async (req, res) => {
   }
 };
 
-
-// Search users by username, email, or phone number
+// Search users 
 exports.searchDriver = async (req, res) => {
   const { query, page, pageSize } = req.query;
   const pageNumber = parseInt(page) || 1;

@@ -3,6 +3,8 @@ import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { SettingService } from '../../services/setting.service';
+import { Setting } from '../../models/setting';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-settings',
@@ -17,7 +19,7 @@ export class SettingsComponent implements OnInit {
  
   constructor(private _AuthService:AuthService,
     private SettingService:SettingService,
-    private authService:AuthService
+    private ToastrService:ToastrService
   ){}
   adminId:any
   selectedSeconds!: number;
@@ -29,16 +31,18 @@ export class SettingsComponent implements OnInit {
   saveSetting(): void {
     this.SettingService.saveSetting(this.selectedSeconds, this.selectedStopCount)
       .subscribe(
-        (response) => {
-          console.log('Setting saved successfully', response);
+        (response:Setting) => {
+          this.ToastrService.success('Setting saved successfully')
+          // console.log('Setting saved successfully', response);
         },
         (error) => {
-          console.error('Error saving setting', error);
+          this.ToastrService.error('Error saving setting',error)
+          // console.error('Error saving setting', error);
         }
       );
   }
   getSetting(){
-    this.SettingService.getSetting().subscribe((response)=>{
+    this.SettingService.getSetting().subscribe((response:Setting[])=>{
       if (response) {
         this.selectedSeconds=response[0].selectedSeconds;
         this.selectedStopCount=response[0].selectedStopCount

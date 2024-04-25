@@ -1,5 +1,5 @@
 
-const Vehicle = require('../models/vehicle');
+const Vehicle = require('../models/vehicleModel');
 const deleteImage = require('../middleware/deleteImage');
 
 // Add a new vehicle
@@ -7,14 +7,9 @@ exports.addVehicle = async (req, res) => {
     try {
         const { name } = req.body;
         const icon = req.file.filename;
-        const existingVehicle = await Vehicle.findOne({ name });
-    if (existingVehicle) {
-        return res.json({ success: false, message:"Name already exists" });
-    }else{
-        const vehicle = new Vehicle({ name, icon });
-        await vehicle.save();
-        res.json({ success: true, message: "Vehicle added successfully" ,data:vehicle});
-    }
+            const vehicle = new Vehicle({ name, icon });
+            await vehicle.save();
+            res.json({ success: true, message: "Vehicle added successfully", data: vehicle });
     } catch (error) {
 
         res.status(500).json({ success: false, error: error.message });

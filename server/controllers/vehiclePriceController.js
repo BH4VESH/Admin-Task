@@ -1,4 +1,4 @@
-const Data = require('../models/vehicle_price');
+const Data = require('../models/vehiclePriceModel');
 
 exports.createData = async (req, res) => {
   try {

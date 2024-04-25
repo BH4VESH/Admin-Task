@@ -1,4 +1,4 @@
-const Zone = require('../models/city');
+const Zone = require('../models/cityModel');
 
 // Controller to save a new zone
 exports.createZone = async (req, res) => {

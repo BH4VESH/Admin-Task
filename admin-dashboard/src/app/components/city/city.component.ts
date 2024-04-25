@@ -3,6 +3,7 @@ import { CityService } from '../../services/city.service';
 import { CommonModule } from '@angular/common';
 import { Country } from '../../models/country';
 import { CountryService } from '../../services/country.service';
+import { Zone } from '../../models/zone'
 import { FormsModule } from '@angular/forms';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
@@ -12,11 +13,7 @@ import { AuthService } from '../../services/auth.service';
 import { BnNgIdleService } from 'bn-ng-idle';
 declare const google: any;
 
-interface Zone {
-  _id: string;
-  name: string;
-  coordinates: google.maps.LatLng[];
-}
+
 @Component({
   selector: 'app-city',
   standalone: true,
@@ -31,17 +28,15 @@ export class CityComponent implements OnInit {
   polygon!: google.maps.Polygon | null;
   currentPolygon: google.maps.Polygon | null = null;
   enteredLocation: string = '';
-  // autocompleteService: google.maps.places.AutocompleteService;
   searchAutocomplete: google.maps.places.Autocomplete | null = null;
   from!: string | undefined;
 
   countries: Country[] = [];
-  selected_country!: any
-  selected_city!: any
+  selected_country!: Country[]|any;//////////////////////////////////
+  selected_city!: string|undefined|null;
   zones: Zone[] = [];
-  selectedCountryReset: any;
-  // zones: any;
-  polygone_coordinet: any
+  selectedCountryReset!:null
+  polygone_coordinet!: google.maps.LatLng[]
   geocoder: google.maps.Geocoder;
   // country_table_data: Country[];
 
@@ -68,10 +63,11 @@ export class CityComponent implements OnInit {
     // this.initAutocomplete();
   }
 
-  onCountrySelection(event: any) {
+  onCountrySelection(event:any) {
     const searchCity: HTMLInputElement = document.getElementById('searchCity') as HTMLInputElement;
     searchCity.value = '';
     this.selected_country = event.value
+    console.log(event.value)
     if (this.searchAutocomplete) {
       this.searchAutocomplete.setComponentRestrictions({ "country": this.selected_country.code });
     }
@@ -238,15 +234,13 @@ export class CityComponent implements OnInit {
   }
 
   clearPolygon() {
-    // console.log("asdf", this.polygon);
     if (this.polygon && typeof this.polygon.setMap === 'function') {
-      this.polygon.setMap(null); // Remove the polygon from the map
-      this.polygon = null; // Clear the polygon coordinates
+      this.polygon.setMap(null); 
+      this.polygon = null; 
 
     }
   }
   /////////////////////////////////////////////////////////////////////////
-
   drawPolygon(coordinates: google.maps.LatLng[]): void {
     this.clearPolygon()
     // Create a new polygon for the selected zone
@@ -281,7 +275,7 @@ export class CityComponent implements OnInit {
   }
 
   updateZone(): void {
-    if (this.selectedZone) {
+    if (this.selectedZone && this.selectedZone._id) {
       const zoneId = this.selectedZone._id;
       const updatedZoneData = {
         name: this.selectedZone.name,

@@ -5,7 +5,6 @@ const userSchema = new mongoose.Schema({
   profilePic: String,
   username: { type: String },
   email: { type: String, unique: true },
-  // countryCode: String,
   phone: { type: String, unique: true },
   stripeCustomerId:{ type: String}
 });

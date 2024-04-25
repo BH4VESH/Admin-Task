@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { User } from '../models/login';
 import { Observable} from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { Router } from '@angular/router';
@@ -16,8 +17,8 @@ export class AuthService {
 
   constructor(private http: HttpClient,private router: Router,private bnIdle: BnNgIdleService,private toster: ToastrService) {}
 
-  login(username: string, password: string): Observable<any> {
-    return this.http.post<any>(`${this.baseUrl}/login`, { username, password }).pipe(
+  login(username: string, password: string): Observable<User> {
+    return this.http.post<User>(`${this.baseUrl}/login`, { username, password }).pipe(
       tap(response => {
         const token = response?.token;
         if (token) {

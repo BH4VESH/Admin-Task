@@ -4,21 +4,19 @@ const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const path = require('path');
 const jwt = require('jsonwebtoken'); 
-const User = require('./models/User');
+const User = require('./models/adminModel');
 const vehicleRoutes = require('./routes/vehicleRoutes');
 const countryRoutes = require('./routes/countryRoutes')
 const cityRoutes=require('./routes/cityRoutes')
-const vehicle_price_Routes=require('./routes/vehicle_price')
+const vehicle_price_Routes=require('./routes/vehiclePriceRoutes')
 const userRoutes=require('./routes/userRoutes')
-const driver_listRoutes=require('./routes/driver-listRoutes')
+const driver_listRoutes=require('./routes/driverListRoutes')
 const settingRoutes=require('./routes/settingRoutes')
-
-
-
-const port = 3000;
+const dotenv=require("dotenv").config();
 const app = express();
+const port = process.env.port;
 
-mongoose.connect('mongodb://127.0.0.1/My_app')
+mongoose.connect(process.env.mongo_path)
   .then(() => console.log('MongoDB Connected'))
   .catch(err => console.log(err));
 
@@ -37,7 +35,8 @@ app.post('/login', async (req, res) => {
     return res.status(401).send('Invalid password');
   }
   if (user) {
-    const token = jwt.sign({ userId: user._id }, JWT_SECRET, { expiresIn: '20m' });
+    const token = jwt.sign({ userId: user._id }, JWT_SECRET);
+    // const token = jwt.sign({ userId: user._id }, JWT_SECRET, { expiresIn: '20m' });
     res.json({ token });
   } 
 });
@@ -70,29 +69,3 @@ app.use('/setting',settingRoutes);
 app.listen(port, () => {
   console.log(`Server is running at http://localhost:${port}`);
 });
-
-
-// app.get('/logout', (req, res) => {
-//   res.send('Logout successful');
-// });
-
-// function checkAuth(req, res, next) {
-//   const token = req.headers.authorization; 
-//   if (token) {
-//     jwt.verify(token, JWT_SECRET, (err, decoded) => {
-//       if (err) {
-//         return res.status(401).send('Unauthorized');
-//       } else {
-//         req.user = decoded;
-//         next();
-//       }
-//     });
-//   } else {
-//     res.status(401).send('Unauthorized');
-//   }
-// }
-
-// // Example protected route
-// app.get('/dashboard', checkAuth, (req, res) => {
-//   res.send('Welcome to the dashboard');
-// });

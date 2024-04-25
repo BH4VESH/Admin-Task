@@ -15,8 +15,8 @@ export class CountryService {
 
   constructor(private http: HttpClient) { }
 
-  searchCountries(query: string): Observable<any> {
-    return this.http.get(`${this.apiUrl}${query}`);
+  searchCountries(query: string): Observable<Country[]> {
+    return this.http.get<Country[]>(`${this.apiUrl}${query}`);
   }
 
   // database

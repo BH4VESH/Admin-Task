@@ -46,7 +46,7 @@
                                         class="alert alert-danger">
                                         <div *ngIf="userProfileForm.get('username')?.errors?.['required']">Username is
                                             required.</div>
-                                        <div *ngIf="userProfileForm.get('username')?.hasError('forbiddenCharacters')"
+                                        <div *ngIf="userProfileForm.get('username')?.hasError('notSymbol')"
                                             class="alert alert-danger">
                                             special characters like , '$', or '!' not allow
                                         </div>

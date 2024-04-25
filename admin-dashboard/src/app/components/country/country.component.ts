@@ -115,7 +115,7 @@ export class CountryComponent implements OnInit, Country {
   }
   // /////////////////////search///////////////////////
   searchQuery: string = '';
-  filteredCountryData: any = [];
+  filteredCountryData: Country[] = [];
   search() {
     if (this.searchQuery.trim() !== '') {
       this.filteredCountryData = this.country_table_data.filter((country: any) =>

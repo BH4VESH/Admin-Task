@@ -7,11 +7,14 @@ import { CountryService } from '../../services/country.service';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule, SortDirection } from '@angular/material/sort';
 import { DriverListService } from '../../services/driver-list.service';
-import { forbiddenCharactersValidator, onlyChar } from '../../validator/username_validation';
+import { notSymbol, onlyChar } from '../../validator/username_validation';
 import { AuthService } from '../../services/auth.service';
 import { CityService } from '../../services/city.service';
 import { VehicleService } from '../../services/vehicle.service';
+import { Driver, DriverServiceType, FatchDriver, UserSearchResponse } from '../../models/driver';
 import { VehicleType } from '../../models/vihicle-type';
+import { Zone } from '../../models/zone';
+import { Country } from '../../models/country';
 
 @Component({
   selector: 'app-driver-list',
@@ -27,18 +30,18 @@ export class DriverListComponent implements OnInit {
 
   userProfileForm: FormGroup;
   profilePic: File | null = null;
-  countries: any[] = [];
-  allUsers: any[] = [];
+  countries: Country[] = [];
+  allUsers: Driver[] = [];
   btn_name: string = "submit"
-  currentDriverId: any;
+  currentDriverId!: string;
 
   currentPage: number = 1;
   totalItems: number = 0;
   itemsPerPage: number = 3;
 
   search_query: string = '';
-  cities: any[] = [];
-  vehicles: any[] = [];
+  cities: Zone[] = [];
+  vehicles: VehicleType[] = [];
   selectVehicleId: string = '';
   selectVehicleName: string = '';
 
@@ -53,7 +56,7 @@ export class DriverListComponent implements OnInit {
   ) {
     this.userProfileForm = this.fb.group({
       profilePic: ['', Validators.required],
-      username: ['', [Validators.required, forbiddenCharactersValidator(), onlyChar()]],
+      username: ['', [Validators.required, notSymbol(), onlyChar()]],
       email: ['', [Validators.required, Validators.email]],
       countryCode: ['', Validators.required],
       phone: ['', Validators.required],
@@ -94,12 +97,10 @@ export class DriverListComponent implements OnInit {
     })
   }
 
-
   submitDriverProfile() {
     const { username, email, phone, countryCode, city } = this.userProfileForm.value;
-
     this.DriverListService.addDriver(countryCode, city, username, email, phone, this.profilePic as File).subscribe(
-      (response) => {
+      (response:Driver) => {
         if (response.success) {
           this.toastrService.success(response.message);
           if (this.allUsers.length < this.itemsPerPage) {
@@ -118,11 +119,9 @@ export class DriverListComponent implements OnInit {
   }
 
   resetForm() {
-    const startIndex = this.paginator.pageIndex * this.itemsPerPage + 1;
-    const endIndex = Math.min((this.paginator.pageIndex + 1) * this.itemsPerPage, this.totalItems);
-
-    console.log(`Range: ${startIndex} - ${endIndex}`);
-
+    // const startIndex = this.paginator.pageIndex * this.itemsPerPage + 1;
+    // const endIndex = Math.min((this.paginator.pageIndex + 1) * this.itemsPerPage, this.totalItems);
+    // console.log(`Range: ${startIndex} - ${endIndex}`);
     this.userProfileForm.reset();
     this.profilePic = null;
     this.fileInput.nativeElement.value = '';
@@ -130,7 +129,7 @@ export class DriverListComponent implements OnInit {
 
   fetchDriverData(): void {
     this.DriverListService.getDriver(this.currentPage, this.itemsPerPage).subscribe(
-      (response: any) => {
+      (response: FatchDriver) => {
         if (response.success) {
           this.allUsers = response.Drivers;
           this.totalItems = response.totalItems;
@@ -185,7 +184,7 @@ export class DriverListComponent implements OnInit {
 
     this.DriverListService.editDriver(DriverId, username, email, countryCode,
       city, phone, profilePic).subscribe(
-        (response) => {
+        (response:Driver) => {
           if (response.success) {
             this.toastrService.success(response.message);
             console.log(response)
@@ -236,8 +235,6 @@ export class DriverListComponent implements OnInit {
       );
     }
   }
-
-
   // ///////////////////////////////////////sort
   sortData(column: string): void {
     let sortOrder: SortDirection = 'asc';
@@ -253,7 +250,7 @@ export class DriverListComponent implements OnInit {
     console.log(sortColumn)
     console.log(sortOrder)
     this.DriverListService.getSortDriver(this.currentPage, this.itemsPerPage, sortColumn, sortOrder).subscribe(
-      (response: any) => {
+      (response: FatchDriver) => {
         if (response.success) {
           this.allUsers = response.Drivers;
           this.totalItems = response.totalItems;
@@ -269,7 +266,7 @@ export class DriverListComponent implements OnInit {
 
   search(): void {
     this.DriverListService.searchDriver(this.search_query, this.currentPage, this.itemsPerPage).subscribe(
-      (response) => {
+      (response:UserSearchResponse) => {
         if (response.success) {
           this.allUsers = response.Drivers;
           this.totalItems = response.totalCount;
@@ -292,10 +289,9 @@ export class DriverListComponent implements OnInit {
   }
   saveService() {
     const serviceId = this.selectVehicleId;
-    this.DriverListService.addService(this.currentDriverId, serviceId).subscribe((driver) => {
+    this.DriverListService.addService(this.currentDriverId, serviceId).subscribe((driver:DriverServiceType) => {
       if (driver.success) {
         this.toastrService.success(driver.message)
-
         for (let index = 0; index < this.allUsers.length; index++) {
           const id = this.allUsers[index]._id;
           // this.selectVehicleId=this.allUsers[index].serviceID
@@ -321,18 +317,14 @@ export class DriverListComponent implements OnInit {
       this.selectVehicleId = selectDriver.serviceID
     }
   }
-  // add status
-  // status = false;
   approveDecline() {
-    // let index
     this.DriverListService.addStatus(this.currentDriverId).subscribe(
-      (response) => {
-        // this.status =! response.status;
+      (response:DriverServiceType) => {
         console.log(response)
         this.toastrService.success(response.message);
         for(let i=0;i<=this.allUsers.length;i++){
           if (this.allUsers[i]._id===this.currentDriverId) {
-            this.allUsers[i].status=response.status
+            this.allUsers[i].status=response.status;
             break
           }
         }
