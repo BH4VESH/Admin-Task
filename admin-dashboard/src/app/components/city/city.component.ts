@@ -32,12 +32,14 @@ export class CityComponent implements OnInit {
   from!: string | undefined;
 
   countries: Country[] = [];
-  selected_country!: Country[]|any;//////////////////////////////////
+  selected_country!: Country[]|any;
   selected_city!: string|undefined|null;
   zones: Zone[] = [];
   selectedCountryReset!:null
   polygone_coordinet!: google.maps.LatLng[]
   geocoder: google.maps.Geocoder;
+  isDissUpdatebtn:boolean=true
+  isDissSavebtn:boolean=false
   // country_table_data: Country[];
 
   constructor(
@@ -61,6 +63,7 @@ export class CityComponent implements OnInit {
     this.initMap();
     this.getAllZone()
     // this.initAutocomplete();
+    
   }
 
   onCountrySelection(event:any) {
@@ -76,19 +79,7 @@ export class CityComponent implements OnInit {
     // this.setCountry(this.selected_country.code);
     this.initAutocomplete();
   }
-  getCountryCoordinates(countryName: string): void {
-    this.geocoder.geocode({ address: countryName }, (results, status) => {
-      if (status === google.maps.GeocoderStatus.OK && results && results.length > 0) {
-        const location = results[0].geometry.location;
-        console.log('country Coordinates:', location.lat(), location.lng());
-        const mapCenter = { lat: location.lat(), lng: location.lng() };
-        this.map.setCenter(mapCenter);
-        this.map.setZoom(8);
-      } else {
-        console.error('Failed to retrieve coordinates for the selected country.');
-      }
-    });
-  }
+
   // //////////////////////////////////////////////map load /////////////
   initMap(): void {
     const mapOptions: google.maps.MapOptions = {
@@ -127,7 +118,9 @@ export class CityComponent implements OnInit {
   // ////////////////////////////////auto complete city /////////////////
   initAutocomplete(): void {
     const searchCity: HTMLInputElement = document.getElementById('searchCity') as HTMLInputElement;
-
+    this.isDissSavebtn=false
+    this.isDissUpdatebtn=true
+    this.initMap()
 
     const options: google.maps.places.AutocompleteOptions = {
       types: ['(cities)'],
@@ -169,12 +162,12 @@ export class CityComponent implements OnInit {
   saveZone() {
     if (!this.selected_city) {
       this.toastr.error('Please select sity first.');
-      this.resetAutocomplete()
+      // this.resetAutocomplete()
       return;
     }
     if (this.polygone_coordinet == null) {
       this.toastr.error('Please draw a polygon first.');
-      this.resetAutocomplete()
+      // this.resetAutocomplete()
       return;
     }
 
@@ -185,7 +178,7 @@ export class CityComponent implements OnInit {
       if (this.selected_city === this.zones[i].name) {
         matchIndex = false;
         this.toastr.error("Duplicate city are not allowed")
-        this.resetAutocomplete()
+        // this.resetAutocomplete()
         break;
       } else {
         matchIndex = true;
@@ -200,6 +193,7 @@ export class CityComponent implements OnInit {
             console.log("thise is save btn zones:", this.zones)
             console.log('Zone created successfully:', response);
             this.toastr.success("city added successfull")
+            this.initMap()
             this.resetAutocomplete()
           },
           error => {
@@ -224,6 +218,8 @@ export class CityComponent implements OnInit {
   selectedZone: Zone | null = null;
 
   selectZone(zone: Zone) {
+    this.isDissSavebtn=true
+    this.isDissUpdatebtn=false
     this.selectedZone = zone;
     console.log("it is selected zone(btn)", this.selectedZone)
     console.log(zone.coordinates)
@@ -289,6 +285,8 @@ export class CityComponent implements OnInit {
             this.zones[index].coordinates = updatedCoordinates;
           }
           this.toastr.success('Zone updated successfully');
+          this.initMap()
+          this.isDissUpdatebtn=true
         },
         (error) => {
           console.error('Error updating zone:', error);

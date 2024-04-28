@@ -37,7 +37,7 @@ export class DriverListComponent implements OnInit {
 
   currentPage: number = 1;
   totalItems: number = 0;
-  itemsPerPage: number = 3;
+  itemsPerPage: number = 4;
 
   search_query: string = '';
   cities: Zone[] = [];

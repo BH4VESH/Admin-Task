@@ -35,8 +35,8 @@ app.post('/login', async (req, res) => {
     return res.status(401).send('Invalid password');
   }
   if (user) {
-    const token = jwt.sign({ userId: user._id }, JWT_SECRET);
-    // const token = jwt.sign({ userId: user._id }, JWT_SECRET, { expiresIn: '20m' });
+    // const token = jwt.sign({ userId: user._id }, JWT_SECRET);
+    const token = jwt.sign({ userId: user._id }, JWT_SECRET, { expiresIn: '20m' });
     res.json({ token });
   } 
 });
@@ -52,7 +52,7 @@ function checkAuth(req, res, next) {
         next();
       }
     });
-  } else {
+  } else {  
     res.status(401).send('Unauthorized');
   }
 }

@@ -40,7 +40,7 @@ export class UserComponent implements OnInit, AfterViewInit {
 
   currentPage: number = 1;
   totalItems: number = 0;
-  itemsPerPage: number = 3;
+  itemsPerPage: number = 4;
   search_query: string = '';
 
   constructor(
@@ -302,15 +302,17 @@ export class UserComponent implements OnInit, AfterViewInit {
     try {
       const result = await this.stripe.createToken(this.card);
       if (result.error) {
-        console.error(result.error.message);
+        this.toastrService.error(result.error.message)
+        // console.error(result.error.message);
       } else {
         if (result.token && result.token.card) {
           this.token = result.token
           this.token_id = result.token.id
           this.addCard()
-          console.log("it is token:", this.token)
+          // console.log("it is token:", this.token)
         } else {
-          console.error('Token or card details are missing.');
+          this.toastrService.error('Token or card details are missing.')
+          // console.error('Token or card details are missing.');
         }
       }
     } catch (error) {
