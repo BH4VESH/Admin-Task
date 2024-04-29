@@ -68,7 +68,7 @@ export class DriverListComponent implements OnInit {
   ngOnInit(): void {
     // this._AuthService.sessionOut();
     this.fetchCountries();
-    this.fetchCities()
+    // this.fetchCities()
     this.fetchDriverData();
     this.fetchVehicle();
 
@@ -84,11 +84,27 @@ export class DriverListComponent implements OnInit {
       this.countries = countries;
     });
   }
-  fetchCities(): void {
-    this.CityService.getAllZone().subscribe(cities => {
-      this.cities = cities;
-      console.log("it is city:", this.cities)
-    });
+  // fetchCities(): void {
+  //   this.CityService.getAllZone().subscribe(cities => {
+  //     this.cities = cities;
+  //     console.log("it is city:", this.cities)
+  //   });
+  // }
+  fetchCity(event: Event) {
+    const target = event.target as HTMLSelectElement;
+    const selectedCountryId = target.value;
+    this.DriverListService.fatchCity(selectedCountryId).subscribe(
+      (response)=>{
+        this.cities=response.cities
+        console.log(response.cities)
+      }
+    )
+    // const selectedCountry = this.countries.find(country => country._id === selectedCountryId);
+    // if (selectedCountry) {
+      console.log('Selected Country:', selectedCountryId);
+      // Fetch the cities based on the selected country
+      // ...
+    // }
   }
   fetchVehicle(): void {
     this.VehicleService.getAllVehicles().subscribe(vehicles => {

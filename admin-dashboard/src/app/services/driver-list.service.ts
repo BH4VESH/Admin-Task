@@ -2,7 +2,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, Subject, catchError, tap, throwError } from 'rxjs';
-import {Driver, DriverServiceType, FatchDriver, UserSearchResponse} from '../models/driver';
+import {Driver, DriverServiceType, FatchDriver, UserSearchResponse, fetchCity} from '../models/driver';
 
 @Injectable({
   providedIn: 'root'
@@ -84,6 +84,11 @@ export class DriverListService {
         return throwError('Server error');
       })
     );
+  }
+  fatchCity(countryId: string): Observable<fetchCity> {
+    const url = `${this.baseUrl}/fatchCity/`;
+    const body = { countryId }; 
+    return this.http.post<fetchCity>(url,body);
   }
 
 

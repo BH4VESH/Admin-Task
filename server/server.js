@@ -63,7 +63,8 @@ app.use('/countrys',checkAuth, countryRoutes);
 app.use('/city',checkAuth, cityRoutes);
 app.use('/vehicle/price',checkAuth, vehicle_price_Routes);
 app.use('/users',checkAuth, userRoutes);
-app.use('/driverlist',checkAuth, driver_listRoutes);
+// app.use('/driverlist',checkAuth, driver_listRoutes);
+app.use('/driverlist', driver_listRoutes);
 app.use('/setting',settingRoutes);
 
 app.listen(port, () => {

@@ -1,5 +1,8 @@
 const Driver = require('../models/driverListModel');
+const zones=require('../models/cityModel')
 const deleteImage = require('../middleware/deleteImage');
+const { default: mongoose } = require('mongoose');
+
 exports.createDriver = async (req, res) => {
   try {
 
@@ -327,23 +330,35 @@ exports.searchDriver = async (req, res) => {
       {
         $lookup: {
           from: "zones",
-          localField: "cityId",
-          foreignField: "_id",
+          let: { cityId: "$cityId" },
+          pipeline: [
+            {
+              $match: {
+                $expr: { $eq: ["$_id", "$$cityId"] }
+              }
+            }
+          ],
           as: "city"
         }
       },
       {
         $lookup: {
           from: "countries",
-          localField: "countryId",
-          foreignField: "_id",
-          as: "country"
+          let: { countryId: "$countryId" },
+          pipeline: [
+            {
+              $match: {
+                $expr: { $eq: ["$_id", "$$countryId"] } 
+              }
+            }
+          ],
+          as: "country" 
         }
       },
       {
         $addFields: {
-          cityName: { "$arrayElemAt": ["$city.name", 0] },
-          countryCode: { "$arrayElemAt": ["$country.country_calling_code", 0] }
+          cityName: { $arrayElemAt: ["$city.name", 0] },
+          countryCode: { $arrayElemAt: ["$country.country_calling_code", 0] }
         }
       },
       {
@@ -367,7 +382,8 @@ exports.searchDriver = async (req, res) => {
         { phone: { $regex: query, $options: 'i' } }
       ]
     });
-
+    
+console.log(Drivers)
     res.json({ success: true, Drivers, totalCount });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Internal server error' });
@@ -472,4 +488,28 @@ exports.addStatus = async (req, res) => {
   }
 }
 
+// fatch city by relevent country id
+exports.fetchCity = async (req, res) => {
+  try {
+    const countryId = req.body.countryId;
 
+    const cities = await zones.aggregate([
+      {
+        $match: {
+          country_id: new mongoose.Types.ObjectId(countryId) 
+        }
+      },
+      {
+        $project: {
+          _id: 1,
+          name: 1
+        }
+      }
+    ]);
+
+    res.json({ success: true, message: 'Cities fetched successfully', cities: cities });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: 'Server error' });
+  }
+};

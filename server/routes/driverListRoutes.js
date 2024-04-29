@@ -11,6 +11,7 @@ router.put('/edit/:id', driver_list_profile, driverListController.updateDriver);
 router.get('/search', driverListController.searchDriver);
 router.put('/service/:id', driverListController.addService);
 router.get('/status/:id', driverListController.addStatus);
+router.post('/fatchCity', driverListController.fetchCity);
 // router.get('/status', Driver_listController);
 
 
