@@ -12,6 +12,7 @@ const vehicle_price_Routes=require('./routes/vehiclePriceRoutes')
 const userRoutes=require('./routes/userRoutes')
 const driver_listRoutes=require('./routes/driverListRoutes')
 const settingRoutes=require('./routes/settingRoutes')
+const createRideRoutes=require('./routes/createRideRoutes')
 const dotenv=require("dotenv").config();
 const app = express();
 const port = process.env.port;
@@ -63,9 +64,10 @@ app.use('/countrys',checkAuth, countryRoutes);
 app.use('/city',checkAuth, cityRoutes);
 app.use('/vehicle/price',checkAuth, vehicle_price_Routes);
 app.use('/users',checkAuth, userRoutes);
-// app.use('/driverlist',checkAuth, driver_listRoutes);
-app.use('/driverlist', driver_listRoutes);
-app.use('/setting',settingRoutes);
+app.use('/driverlist',checkAuth,driver_listRoutes);
+app.use('/setting',checkAuth,settingRoutes);
+// task-4 start
+app.use('/createride',createRideRoutes);
 
 app.listen(port, () => {
   console.log(`Server is running at http://localhost:${port}`);

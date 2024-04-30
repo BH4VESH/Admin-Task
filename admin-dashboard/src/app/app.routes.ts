@@ -12,6 +12,7 @@ import { UserComponent } from './components/user/user.component';
 import { DriverListComponent } from './components/driver-list/driver-list.component';
 import { AdminComponent } from './components/admin/admin.component';
 import { PagenotfoundComponent } from './components/pagenotfound/pagenotfound.component';
+import { CreateRideComponent } from './components/create-ride/create-ride.component';
 
 
 
@@ -33,7 +34,8 @@ export const routes: Routes = [
           { path: 'vehicle_pricing', component: VehiclePricingComponent },
           { path: 'settings', component: SettingsComponent },
           { path: 'user', component: UserComponent },
-          { path: 'driver-list', component: DriverListComponent }
+          { path: 'driver-list', component: DriverListComponent },
+          { path: 'create_ride', component:CreateRideComponent }
         ]
       },
       {path:'**',component:PagenotfoundComponent,title:'page not found'}

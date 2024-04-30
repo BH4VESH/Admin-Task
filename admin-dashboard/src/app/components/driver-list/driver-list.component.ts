@@ -46,12 +46,10 @@ export class DriverListComponent implements OnInit {
   selectVehicleName: string = '';
 
   constructor(
-    private _AuthService: AuthService,
     private fb: FormBuilder,
     private DriverListService: DriverListService,
     private countryService: CountryService,
     private toastrService: ToastrService,
-    private CityService: CityService,
     private VehicleService: VehicleService,
   ) {
     this.userProfileForm = this.fb.group({
