@@ -113,7 +113,8 @@ export class VehiclePricingComponent implements OnInit{
         this.ToastrService.success("Data saved successfully");
         this.emptyAll();
       }, error => {
-        console.error('Error sending data:', error);
+        this.ToastrService.error(error.error.message)
+        console.error('Error sending data:', error.error.message);
       });
     } else {
       this.ToastrService.error("Error: All fields are required");

@@ -5,8 +5,14 @@ import { ToastrService } from 'ngx-toastr';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CreateRideService } from '../../services/create-ride.service';
-import { User } from '../../models/user';
+import { Coordinate, User, getVehiclePrice } from '../../models/createRide';
 import { SettingService } from '../../services/setting.service';
+import { CityService } from '../../services/city.service';
+import { Cons, from, of, scheduled } from 'rxjs';
+import { CardService } from '../../services/card.service';
+import { CustomerCardsResponse } from '../../models/card';
+import { tick } from '@angular/core/testing';
+import { ThisReceiver } from '@angular/compiler';
 
 declare const google: any;
 
@@ -19,9 +25,7 @@ declare const google: any;
 })
 export class CreateRideComponent implements OnInit, AfterViewInit {
   @ViewChild('mapContainer', { static: true }) mapContainer!: ElementRef<HTMLElement>;
-  // fromInput: HTMLInputElement = document.getElementById('from-input') as HTMLInputElement;
-  // toInput: HTMLInputElement = document.getElementById('to-input') as HTMLInputElement;
-  userPhoneInput: FormGroup;
+  // userPhoneInput: FormGroup;
   countries: Country[] = [];
   users: User[] = [];
   Username: string = '';
@@ -32,21 +36,25 @@ export class CreateRideComponent implements OnInit, AfterViewInit {
   fromTo: boolean = false
   stopInputs: string[] = [];
   selectedStopCount!: number
+  countryCallingCode!: string
+  selected_country_code!: string
   // for the map
   autocompleteService: google.maps.places.AutocompleteService;
   map!: google.maps.Map;
-  fromMarker!: google.maps.Marker;
-  toMarker!: google.maps.Marker;
+  fromMarker: google.maps.Marker | null = null;;
+  toMarker: google.maps.Marker | null = null;;
   stopsMarkers: google.maps.Marker[] = [];
-  path: google.maps.Polyline | undefined;
-  directionsRenderer: google.maps.DirectionsRenderer | undefined;
+  directionsRenderer: google.maps.DirectionsRenderer | null = null
   directionsService!: google.maps.DirectionsService;
 
-  from!: string | undefined;
-  to!: string | undefined;
-  stop!: string | undefined;
-  distance!: string | undefined;
-  duration!: string | undefined;
+  distance!: Number
+  duration!: any
+  coordinates: any[] = []
+  ifInsideZone: boolean = false;
+  zoneCityId: string | undefined  //fatch in isPointInsidePolygon()
+  allPriceData: getVehiclePrice[] = []
+  ifCardAdded: boolean = false
+  // calculateDisabled:boolean=true
 
   constructor(
     private fb: FormBuilder,
@@ -54,15 +62,22 @@ export class CreateRideComponent implements OnInit, AfterViewInit {
     private toastrService: ToastrService,
     private CreateRideService: CreateRideService,
     private SettingService: SettingService,
-    // private VehicleService: VehicleService,
+    private CityService: CityService,
+    private CardService: CardService,
   ) {
-    this.userPhoneInput = this.fb.group({
-      countryCode: ['', Validators.required],
-      phone: ['', Validators.required],
-    });
     this.autocompleteService = new google.maps.places.AutocompleteService();
     this.directionsService = new google.maps.DirectionsService();
   }
+
+  userPhoneInput = this.fb.group({
+    countryCode: ['', Validators.required],
+    phone: ['', Validators.required],
+  });
+
+  fromToInput = this.fb.group({
+    from: ['', Validators.required],
+    to: ['', Validators.required],
+  });
 
   ngOnInit(): void {
     this.fetchCountries();
@@ -71,25 +86,31 @@ export class CreateRideComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    this.initAutocomplete(this.placeMarker.bind(this));   
+    // pre selected vehicle servece 
+    // const selectedOption = (document.getElementById('inputGroupid') as HTMLSelectElement).value;
+    // this.onChangeService({ target: { value: selectedOption } })
+    // this.convertPolygoneObject()
   }
 
   fetchCountries(): void {
     this.countryService.fatchCountry().subscribe(countries => {
       this.countries = countries;
-      console.log(countries)
+      console.log("country code", countries[0].short_name)
     });
   }
   callingCode(event: Event) {
     const target = event.target as HTMLSelectElement;
-    const selectedCountryId = target.value;
-    console.log(selectedCountryId)
+    const [id, shortName] = target.value.split('-');
+    this.countryCallingCode = id;
+    this.selected_country_code = shortName
+    console.log("countryCallingCode", this.countryCallingCode)
+
   }
   searchUsers(): void {
-    const { countryCode, phone } = this.userPhoneInput.value;
-    console.log(countryCode, phone)
-    if (countryCode && phone) {
-      this.CreateRideService.searchUsers(countryCode, phone)
+    const { phone } = this.userPhoneInput.value;
+    console.log(this.countryCallingCode, phone)
+    if (this.countryCallingCode && phone) {
+      this.CreateRideService.searchUsers(this.countryCallingCode, phone)
         .subscribe(
           (response: any) => {
             if (response.success) {
@@ -97,7 +118,11 @@ export class CreateRideComponent implements OnInit, AfterViewInit {
               this.toastrService.success(response.message)
               this.setUserValue()
               this.showUserSection = true
-              console.log(this.users)
+              console.log("it is search user :",this.users)
+              // console.log("it is serch responce :",response)
+              console.log("it is serch card :", response.cards)
+              // check if card added for the payment
+              this.ifCardAddedFn(response.cards)
             } else {
               this.toastrService.error(response.message)
               this.showUserSection = false
@@ -120,15 +145,17 @@ export class CreateRideComponent implements OnInit, AfterViewInit {
     this.Phone = this.users[0].phone;
   }
   nextBtn() {
+    this.convertPolygoneObject();
+    this.initAutocomplete(this.placeMarker.bind(this));
     this.next = false;
     this.fromTo = true
   }
-  // fetch stps in the setting service
+  // fetch stops in the setting service
   fetchStop() {
     this.SettingService.getSetting().subscribe(
       (Response) => {
         this.selectedStopCount = Response[0].selectedStopCount
-        console.log(this.selectedStopCount)
+        console.log("total stops", this.selectedStopCount)
       }
     )
   }
@@ -138,33 +165,36 @@ export class CreateRideComponent implements OnInit, AfterViewInit {
       setTimeout(() => {
         this.initAutocomplete(this.placeMarker.bind(this))
       });
-      // this.initAutocomplete();
     }
   }
   removeStopInput(index: number): void {
     if (index >= 0 && index < this.stopInputs.length) {
-      // Remove the stop from the inputs array
       this.stopInputs.splice(index, 1);
-  
-      // Remove the stop marker from the map
+
       if (this.stopsMarkers[index]) {
         this.stopsMarkers[index].setMap(null);
         this.stopsMarkers.splice(index, 1);
       }
-      // Redraw the path with the updated stops
-      this.drawPath();
-      this.calculateDistance()
+      if (this.fromToInput.get('from')?.value && this.fromToInput.get('to')?.value) {
+        this.drawPath();
+      }
     }
   }
 
-  logAllValues(): void {
-    console.log('From:', (document.getElementById('from-input') as HTMLInputElement).value);
-    console.log('To:', (document.getElementById('to-input') as HTMLInputElement).value);
-    this.stopInputs.forEach((value, index) => {
-      console.log(`Stop ${index + 1}:`, value);
-    });
-    console.log(this.stopsMarkers)
-  }
+  // logAllValues(): void {
+  //   console.log('From:', (document.getElementById('from-input') as HTMLInputElement).value);
+  //   console.log("From coordinate :",this.fromMarker?.getPosition()?.toUrlValue())
+  //   console.log('To:', (document.getElementById('to-input') as HTMLInputElement).value);
+  //   console.log("To coordinate :",this.toMarker?.getPosition()?.toUrlValue())
+  //   this.stopsMarkers.forEach((marker, index) => {
+  //     console.log(`Stop ${index + 1} coordinates:`, marker.getPosition()?.toUrlValue());
+  //   });
+  //   this.stopInputs.forEach((_, index) => {
+  //     const stopInput: HTMLInputElement = document.getElementById(`stop-input-${index}`) as HTMLInputElement;
+  //     console.log(`Stop ${index + 1}:`, stopInput.value); // Log the value of the stop input
+  //   });
+  //   console.log(this.stopsMarkers)
+  // }
 
   trackByFn(index: number, item: any): number {
     return index;
@@ -172,36 +202,46 @@ export class CreateRideComponent implements OnInit, AfterViewInit {
 
   // for the map
   initMap(): void {
-    const mapOptions: google.maps.MapOptions = {
-      center: { lat: 22.2598107, lng: 70.7287299 },
-      zoom: 10,
-
-    };
-
-    this.map = new google.maps.Map(this.mapContainer.nativeElement, mapOptions);
+    navigator.geolocation.getCurrentPosition((location) => {
+      let coordinates = location.coords;
+      const myplace = { lat: coordinates.latitude, lng: coordinates.longitude };
+      this.map = new google.maps.Map(
+        this.mapContainer.nativeElement,
+        {
+          zoom: 10,
+          center: myplace,
+        }
+      );
+    });
   }
 
-
+  // autoComplete for every field
   initAutocomplete(placeMarker: (place: google.maps.places.PlaceResult, type: 'from' | 'to' | 'stop') => void) {
     const fromInput: HTMLInputElement = document.getElementById('from-input') as HTMLInputElement;
     const toInput: HTMLInputElement = document.getElementById('to-input') as HTMLInputElement;
+    const options: google.maps.places.AutocompleteOptions = {
+      componentRestrictions: { country: this.selected_country_code }
+    };
 
-    const fromAutocomplete = new google.maps.places.Autocomplete(fromInput);
-    const toAutocomplete = new google.maps.places.Autocomplete(toInput);
+    const fromAutocomplete = new google.maps.places.Autocomplete(fromInput, options);
+    const toAutocomplete = new google.maps.places.Autocomplete(toInput, options);
 
     fromAutocomplete.addListener('place_changed', () => {
       const place = fromAutocomplete.getPlace();
-      placeMarker(place, 'from');
+      var searchPoint = { lat: place.geometry.location.lat(), lng: place.geometry.location.lng() };
+      this.ifInsideZone = false
+      this.isPointInsidePolygon(searchPoint, place, placeMarker, 'from');
     });
 
     toAutocomplete.addListener('place_changed', () => {
       const place = toAutocomplete.getPlace();
+      console.log("to palce:", place)
       placeMarker(place, 'to');
     });
 
     this.stopInputs.forEach((_, index) => {
       const stopInput: HTMLInputElement = document.getElementById(`stop-input-${index}`) as HTMLInputElement;
-      const autocomplete = new google.maps.places.Autocomplete(stopInput);
+      const autocomplete = new google.maps.places.Autocomplete(stopInput, options);
 
       autocomplete.addListener('place_changed', () => {
         const place = autocomplete.getPlace();
@@ -210,42 +250,75 @@ export class CreateRideComponent implements OnInit, AfterViewInit {
     });
   }
 
+  //check from marker position
+  convertPolygoneObject() {
+    this.coordinates = []
+    this.users.forEach(user => {
+      const polygon = user.city.coordinates.map(coord => new google.maps.LatLng(coord.lat, coord.lng));
+      const googlePolygon = new google.maps.Polygon({ paths: polygon });
+      this.coordinates.push(googlePolygon)
+    }
+    );
+    console.log("coordinates", this.coordinates)
+  }
 
+  isPointInsidePolygon(searchPoint: { lat: number; lng: number; }, place: google.maps.places.PlaceResult, placeMarker: (place: google.maps.places.PlaceResult, type: 'from' | 'to' | 'stop') => void, type: 'from' | 'to' | 'stop') {
+    // let inside = false;
+    for (var i = 0; i < this.coordinates.length; i++) {
+      if (google.maps.geometry.poly.containsLocation(searchPoint, this.coordinates[i])) {
+        this.ifInsideZone = true;
+
+        // ------------fatch zoneCityId in the users array---------------------
+        this.zoneCityId = this.users[i].city._id
+        this.getVehiclePrice()//get price from the database
+        // console.log("city data in user[]",i)
+        console.log("city id is:", this.users[i].city._id)
+        break;
+      }
+    }
+    if (this.ifInsideZone) {
+      this.toastrService.success('Point is inside polygon');
+      setTimeout(() => {
+        placeMarker(place, type);
+      }, 0);
+    } else {
+      alert('Point is not inside any polygon');
+      this.ifInsideZone = false
+      this.fromToInput.patchValue({
+        from: ""
+      })
+      if (this.fromMarker) {
+        this.fromMarker.setMap(null);
+        this.directionsRenderer?.setMap(null);
+        this.directionsRenderer = null;
+      }
+    }
+  }
+
+  // palce marker 
   placeMarker(place: google.maps.places.PlaceResult, type: 'from' | 'to' | 'stop'): void {
     if (!place || !place.geometry || !place.geometry.location) {
       this.toastrService.error('Please select a valid location.');
       return;
     }
-  
+
     let iconUrl;
     if (type === 'from') {
       iconUrl = 'https://maps.google.com/mapfiles/kml/paddle/blu-circle.png';
-      this.from = place.name || '';
+      // this.from = place.name || '';
       if (this.fromMarker) {
         this.fromMarker.setMap(null);
       }
     } else if (type === 'to') {
       iconUrl = 'https://maps.google.com/mapfiles/kml/paddle/grn-circle.png';
-      this.to = place.name || '';
+      // this.to = place.name || '';
       if (this.toMarker) {
-        this.toMarker.setMap(null); 
+        this.toMarker.setMap(null);
       }
     } else {
       iconUrl = 'https://maps.google.com/mapfiles/kml/paddle/wht-circle.png';
-      // this.stopsMarkers.forEach(marker => marker.setMap(null)); // Remove existing stop markers
-      // this.stopsMarkers = [];
-      // const marker = new google.maps.Marker({
-      //   position: place.geometry.location,
-      //   map: this.map,
-      //   title: place.name || '',
-      //   icon: {
-      //     url: iconUrl,
-      //     scaledSize: new google.maps.Size(50, 50)
-      //   }
-      // });
-      // this.stopsMarkers.push(marker);
     }
-  
+
     const marker = new google.maps.Marker({
       position: place.geometry.location,
       map: this.map,
@@ -255,42 +328,130 @@ export class CreateRideComponent implements OnInit, AfterViewInit {
         scaledSize: new google.maps.Size(50, 50)
       }
     });
-  
+
     if (type === 'from') {
       this.fromMarker = marker;
     } else if (type === 'to') {
       this.toMarker = marker;
-    }else{
+    } else {
       this.stopsMarkers.push(marker)
-      console.log(this.stopsMarkers)
+      console.log("thise is stopMarkers:", this.stopsMarkers)
     }
-  
-    if (this.from && this.to) {
-      this.calculateDistance();
+
+    if (this.fromToInput.get('from')?.value && this.fromToInput.get('to')?.value) {
       this.drawPath();
     }
-  
     this.map.setCenter(place.geometry.location);
+    // console.log(place.geometry.location.lat())
+    // console.log(place.geometry.location.lng())
   }
 
-  // palce marker over
-  ///////////////////////////////////////////////////////////////////////////
+  calculate() {
+    var fromValue = (document.getElementById('from-input') as HTMLInputElement).value
+    var toValue = (document.getElementById('to-input') as HTMLInputElement).value
+
+    if (this.ifInsideZone) {
+      if (!fromValue && !toValue) {
+        this.toastrService.error('Please select "from" and "to" location.');
+      } else if (!fromValue) {
+        if (this.fromMarker) {
+          this.fromMarker.setMap(null);
+          this.fromMarker = null;
+          this.directionsRenderer?.setMap(null);
+          this.directionsRenderer = null;
+        }
+        this.toastrService.error('Please select "From" location.');
+      }
+      else if (!toValue) {
+        if (this.toMarker) {
+          this.toMarker.setMap(null);
+          this.toMarker = null;
+          this.directionsRenderer?.setMap(null);
+          this.directionsRenderer = null;
+        }
+        this.toastrService.error('Please select "To" location.');
+      } else if (fromValue === toValue) {
+        console.log(fromValue, toValue)
+        this.toastrService.error('Invalid: Same input location for "From" and "To".');
+        // this.fromMarker=null
+        // this.toMarker=null
+      } else {
+        // check price not awilable in selected city
+        if (this.allPriceData.length == 0) {
+          this.toastrService.warning(" Not awailable any price,plz enter price from vehicle pricing section")
+          this.priceData = []
+          // this.fromMarker=null
+        } else {
+          this.calculateDistance();
+        }
+      }
+    } else {
+      this.toastrService.error("from location must be inside the polygone")
+      this.distance = 0
+      this.duration = 0
+      this.zoneCityId = ""
+      // this.fromToInput.reset()
+      // this.resetMarkers()
+    }
+  }
+  // resetMarkers() {
+  //   if (this.fromMarker) {
+  //     this.fromMarker.setMap(null);
+  //     this.fromMarker = null;
+  //   }
+  //   if (this.toMarker) {
+  //     this.toMarker.setMap(null);
+  //     this.toMarker = null;
+  //   }
+  //   for (const stopMarker of this.stopsMarkers) {
+  //     stopMarker.setMap(null);
+  //   }
+  //   this.stopsMarkers = [];
+  //   if (this.directionsRenderer) {
+  //     this.directionsRenderer.setMap(null);
+  //     this.directionsRenderer = null;
+  //   }
+  // }
 
   calculateDistance(): void {
     const service = new google.maps.DistanceMatrixService();
-    const data = {
-      origins: [this.from],
-      destinations: [this.to],
-      travelMode: 'DRIVING'
+    const origins: google.maps.LatLng[] = [this.fromMarker?.getPosition()!];
+    const destinations: google.maps.LatLng[] = [this.toMarker?.getPosition()!];
+
+    for (const stopMarker of this.stopsMarkers) {
+      const position = stopMarker.getPosition();
+      if (position) {
+        destinations.push(position);
+      }
     }
-    service.getDistanceMatrix(data
-      ,
+    const data = {
+      origins: origins,
+      destinations: destinations,
+      travelMode: 'DRIVING'
+    };
+
+    service.getDistanceMatrix(data,
       (response: google.maps.DistanceMatrixResponse, status: google.maps.DistanceMatrixStatus) => {
         if (status === 'OK' && response.rows.length > 0 && response.rows[0].elements.length > 0) {
-          this.distance = response.rows[0].elements[0].distance.text;
-          this.duration = response.rows[0].elements[0].duration.text;
-          console.log(this.distance)
-          console.log(this.duration)
+          console.log("asdfasdfsd", response)
+          let totalDistance = 0;
+          let totalDuration = 0;
+          for (const row of response.rows) {
+            for (const element of row.elements) {
+              if (element.status === 'OK') {
+                totalDistance += element.distance.value;//meter
+                totalDuration += element.duration.value;//second
+              }
+            }
+          }
+          const distanceInKm = totalDistance / 1000;
+          this.distance = distanceInKm//km
+          const totalHours = Math.floor(totalDuration / 3600);
+          const remainingSeconds = totalDuration % 3600;
+          const totalMinutes = Math.floor(remainingSeconds / 60);
+          this.duration = `${totalHours}, hours, ${totalMinutes}, minutes`
+
+          this.priceCalculation(distanceInKm, totalDuration)//estimete fare
 
         } else {
           console.error('Error calculating distance:', status);
@@ -299,21 +460,20 @@ export class CreateRideComponent implements OnInit, AfterViewInit {
     );
   }
 
-  //////////////////////////////////////////////////////////////////////////////////
-
+  // drow path
   drawPath(): void {
     const waypoints = this.stopsMarkers.map(marker => ({
       location: marker.getPosition()!,
       stopover: true
     }));
-  
+
     const request = {
-      origin: this.fromMarker.getPosition()!,
+      origin: this.fromMarker?.getPosition()!,
       destination: this.toMarker?.getPosition()!,
       waypoints: waypoints,
       travelMode: google.maps.TravelMode.DRIVING
     };
-  
+
     this.directionsService.route(request, (response, status: google.maps.DirectionsStatus) => {
       if (status === google.maps.DirectionsStatus.OK) {
         if (this.directionsRenderer) {
@@ -334,4 +494,262 @@ export class CreateRideComponent implements OnInit, AfterViewInit {
       }
     });
   }
+
+  // get vihicle price from selected city in the data
+  getVehiclePrice(): void {
+    if (!this.zoneCityId) {
+      console.error('Zone city ID is undefined');
+      return;
+    }
+    this.CreateRideService.getVehiclePrice(this.zoneCityId).subscribe((response: any) => {
+      if (response.success) {
+        this.allPriceData = response.vehicleData
+        console.log("vehicle price data: ",this.allPriceData)
+        // this.priceCalculation()
+      }
+    });
+  }
+
+  priceData: any[] = []
+
+  priceCalculation(distanceInKm: number, totalDuration: number) {
+    var BasePrice: number = 0
+    var DistancePrice: number = 0
+    var TimePrice: number = 0
+    var ServiceFees: number = 0
+    this.priceData = []
+    var vehicleId: string = ""
+    var durationMin = Number(Math.round((totalDuration % 3600) / 60))//minut
+
+    for (let x = 0; x < this.allPriceData.length; x++) {
+
+      vehicleId = this.allPriceData[x].vehicle._id
+
+      BasePrice = this.allPriceData[x].vehicle_price.Base_price;
+
+      DistancePrice = ((distanceInKm) - (this.allPriceData[x].vehicle_price.Distance_for_base_price)) * (this.allPriceData[x].vehicle_price.Price_per_Unit_Distance);
+
+      TimePrice = (durationMin) * (this.allPriceData[x].vehicle_price.Price_per_Unit_time);
+
+      ServiceFees = (BasePrice) + (DistancePrice) + (TimePrice)
+      if (ServiceFees < this.allPriceData[x].vehicle_price.min_fare) {
+        ServiceFees = this.allPriceData[x].vehicle_price.min_fare;
+      }
+
+      this.priceData.push({
+        vehicleId: vehicleId,
+        vehicleName: this.allPriceData[x].vehicle.name,
+        ServiceFees: ServiceFees
+      })
+      // console.log("it is all price :",this.allPriceData)
+      console.log("it is pricing data :", this.priceData)
+    }
+  }
+
+  selectedServiceId: string = ''
+  selectedestimeteFare!: number
+  // select service
+  onChangeService(event: any) {
+    // const vehicleId = event.target.value
+    const selectedPrice=event.target.value;
+    const [vehicleId,estimeteFare]=selectedPrice.split('-');
+    this.selectedServiceId = vehicleId
+    this.selectedestimeteFare=estimeteFare
+    console.log("selectedServiceId :", this.selectedServiceId)
+    console.log("estimateFare :", this.selectedestimeteFare)
+    
+
+    // when need service id then iv call////////////////////////////////////////////
+
+    //  // Trigger the onChangeService 
+    //  const selectedOption = (document.getElementById('inputGroupid') as HTMLSelectElement).value;
+    //  this.onChangeService({ target: { value: selectedOption } });
+  }
+
+  // check if card adeed or not
+  ifCardAddedFn(cards: any) {
+    if (cards.length !== 0) {
+      console.log(cards.length)
+      this.ifCardAdded = true
+    } else {
+      this.ifCardAdded = false
+    }
+  }
+
+  //selected payment option
+  selectedPaymentOption: string = '';
+  onPaymentOptionChange() {
+    console.log('Selected Payment Option:', this.selectedPaymentOption);
+  }
+  //selected Booking option
+  selectedBookingOption: string = '';
+  selectedDate: string = '';
+  selectedTime: string = '';
+  showDateError: boolean = false;
+  showTimeError: boolean = false;
+
+  onBookingOptionChange() {
+    console.log('Selected Booking Option:', this.selectedBookingOption);
+    if (this.selectedBookingOption === 'BookNow') {
+      this.selectedDate = ''
+      this.selectedTime = ''
+    }
+    // console.log('Selected date:', this.selectedDate);
+    // console.log('Selected time:', this.selectedTime);
+  }
+  // for the date picker
+  minDate(): string {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = (today.getMonth() + 1).toString().padStart(2, '0');
+    const day = today.getDate().toString().padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+  validateDate() {
+    if (this.selectedBookingOption === 'Schedule' && this.selectedDate) {
+      // debugger
+      const enteredDate = new Date(this.selectedDate);
+      const currentDate = new Date();
+      // console.log("entre date",enteredDate.toISOString().split('T')[0])
+      // console.log("current date",currentDate.toISOString().split('T')[0])
+      if (enteredDate.toISOString().split('T')[0] < currentDate.toISOString().split('T')[0]) {
+        this.showDateError = true;
+      } else {
+        this.showDateError = false;
+        this.validareTime()
+      }
+    }
+  }
+
+  validareTime() {
+    console.log(this.selectedDate)
+    console.log(this.selectedTime)
+    if (this.selectedBookingOption === 'Schedule' && this.selectedDate) {
+      const enteredTime = new Date(`${this.selectedDate}T${this.selectedTime}`);
+      const currentTime = new Date();
+      // console.log("enter time is: ",enteredTime)
+      // console.log("surrent time is: ",currentTime)
+      if (enteredTime < currentTime) {
+        this.showTimeError = true;
+      } else {
+        this.showTimeError = false;
+      }
+    }
+    else {
+      this.toastrService.error("please select date first")
+      this.selectedTime = ""
+    }
+  }
+  
+  showSelectionError=false 
+  showPaymentError=false 
+  showBookingError=false 
+  showCalulateError=false
+
+  ConfirmRide(){
+    var fromValue = (document.getElementById('from-input') as HTMLInputElement).value
+    var toValue = (document.getElementById('to-input') as HTMLInputElement).value
+    const stopValue:string[]=[];
+    this.stopInputs.forEach((_, index) => {
+          const stopInput: HTMLInputElement = document.getElementById(`stop-input-${index}`) as HTMLInputElement;
+          stopValue.push(stopInput.value)
+          // console.log(`Stop ${index + 1}:`, stopInput.value); // Log the value of the stop input
+        });
+    // const fromLat = this.fromMarker?.getPosition()?.lat()
+    // const fromLng = this.fromMarker?.getPosition()?.lng()
+    
+    // const toLat = this.toMarker?.getPosition()?.lat()
+    // const toLng = this.toMarker?.getPosition()?.lng()
+    // const stopCoords: Coordinate[] = [];
+
+    // this.stopsMarkers.forEach((marker, index) => {
+    //   const position = marker.getPosition();
+    //   if (position) {
+    //     const coord: Coordinate = {
+    //       lat: position.lat(),
+    //       lng: position.lng()
+    //     };
+    //     stopCoords.push(coord);
+    //   }
+    // });
+
+    //service selection validation
+    console.log("payment optionn :",this.selectedPaymentOption)
+    if(this.selectedServiceId==''){
+      this.showSelectionError=true;
+    }else{
+      this.showSelectionError=false;
+    }
+    //service selection validation
+    if(this.selectedPaymentOption==''){
+      this.showPaymentError=true;
+    }else{
+      this.showPaymentError=false;
+    }
+    //booking selection validation
+    if(this.selectedBookingOption==''){
+      this.showBookingError=true;
+    }else{
+      this.showBookingError=false;
+    }
+    if (this.distance==undefined) {
+      this.showCalulateError=true
+    }else{
+      this.showCalulateError=false
+    }
+
+    // duration and distence comvet=>km/m
+    const durationParts = this.duration.split(', '); 
+    const hours = parseInt(durationParts[0], 10);
+    const minutes = parseInt(durationParts[2], 10);
+    const durationInMinutes = hours * 60 + minutes;
+
+    // shedule date and time
+    // let scheduledDate;
+    // if (this.selectedDate && this.selectedTime) {
+    //   scheduledDate = new Date(`${this.selectedDate}T${this.selectedTime}`);
+    // } else {
+    //   scheduledDate = new Date(); 
+    // }
+    // const datetimeString = `${this.selectedDate}T${this.selectedTime}`;
+
+// Create a new Date object using the datetime string
+// const scheduledDate = new Date(datetimeString);
+const [hoursStr, minutesStr] = this.selectedTime.split(':');
+const h = parseInt(hoursStr, 10);
+const m = parseInt(minutesStr, 10);
+const scheduledTime = h * 3600 + m * 60;
+    
+
+    const allRideData = {
+      userId:this.users[0]._id,
+      countryId: this.countryCallingCode,
+      cityId: this.zoneCityId,
+      vehicleId: this.selectedServiceId,
+      totalDistanceKm: this.distance,//km
+      totalDurationMin: durationInMinutes,//minuts
+      // fromCoord: { lat: fromLat, lng: fromLng },
+      // toCoord: { lat: toLat, lng: toLng },
+      fromLocation:fromValue,
+      toLocation:toValue,
+      // stopCoords,
+      stopValue,
+      estimeteFare: this.selectedestimeteFare,
+      paymentOption:this.selectedPaymentOption,
+      bookingOption:this.selectedBookingOption,
+      scheduledDate: new Date(this.selectedDate),
+      scheduledTimeSeconds:scheduledTime,
+    }
+
+    console.log(allRideData)
+
+    this.CreateRideService.saveRide(allRideData).subscribe((responce)=>{
+      if (responce.success) {
+        console.log("saved data : ",responce.ride)
+      }
+    })
+  
+
+  }
+
 }

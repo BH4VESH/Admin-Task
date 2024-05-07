@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { User} from '../models/user';
+import { getVehiclePrice } from '../models/createRide';
 
 @Injectable({
   providedIn: 'root'
@@ -13,7 +14,15 @@ export class CreateRideService {
 
   searchUsers(countryId: string, phone: string): Observable<User[]> {
     const body = { countryId, phone };
-
     return this.http.post<User[]>(`${this.baseUrl}/searchUser`,  body );
+  }
+
+  getVehiclePrice(zoneCityId: string): Observable<getVehiclePrice[]> {
+    const body = { zoneCityId};
+
+    return this.http.post<getVehiclePrice[]>(`${this.baseUrl}/getVehiclePrice`,  body );
+  }
+  saveRide(data: any): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/saveRide`, data);
   }
 }

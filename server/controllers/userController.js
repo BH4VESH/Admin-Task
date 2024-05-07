@@ -229,23 +229,6 @@ exports.updateUser = async (req, res) => {
       updatedFields.profilePic = req.file.filename;
     }
 
-    const existingUser = await User.findOne({
-      $or: [
-        { email: updatedFields.email },
-        { phone: updatedFields.phone }
-      ]
-    });
-
-    if (existingUser && existingUser._id.toString() !== userId) {
-      let errorMessage = '';
-      if (existingUser.email === updatedFields.email) {
-        errorMessage = 'Email is already in use. Please choose a different one.';
-      } else if (existingUser.phone === updatedFields.phone) {
-        errorMessage = 'Phone number is already in use. Please choose a different one.';
-      }
-      return res.json({ success: false, message: errorMessage });
-    }
-
     const oldUser = await User.findById(userId);
     
 
@@ -293,8 +276,17 @@ exports.updateUser = async (req, res) => {
     }
     res.json({ success: true, message: 'User updated successfully', user: user[0] });
   } catch (error) {
-    console.error('Error updating user:', error);
-    res.status(500).json({ success: false, message: 'Internal server error' });
+      if (error.code === 11000 && error.keyPattern && error.keyValue) {
+        let errorMessage;
+        if (error.keyPattern.phone) {
+          errorMessage = `Phone number is already registered.`;
+        } else if (error.keyPattern.email) {
+          errorMessage = `Email is already registered.`;
+        }
+        res.status(500).json({ success: false, message: errorMessage });
+      } else {
+        console.error(error)
+      }
   }
 };
 

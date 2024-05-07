@@ -6,7 +6,7 @@ import { CountryService } from '../../services/country.service';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { User2Service } from '../../services/user2.service';
 import { MatSort, MatSortModule, SortDirection } from '@angular/material/sort';
-import { User,UserSearchResponse,FatchUser, SortResponce } from '../../models/user'
+import { User, UserSearchResponse, FatchUser, SortResponce } from '../../models/user'
 import { Country } from '../../models/country';
 
 //for card
@@ -36,7 +36,7 @@ export class UserComponent implements OnInit, AfterViewInit {
   countryCode!: string;
   allUsers: any[] = [];
   btn_name: string = "submit"
-  currentUserId!:string;
+  currentUserId!: string;
 
   currentPage: number = 1;
   totalItems: number = 0;
@@ -94,7 +94,7 @@ export class UserComponent implements OnInit, AfterViewInit {
     const { username, email, phone } = this.userProfileForm.value;
 
     this.user2Service.addUser(this.countryId, username, email, phone, this.profilePic as File).subscribe(
-      (response:User) => {
+      (response: User) => {
         if (response.success) {
           this.toastrService.success('User added successfully.');
           if (this.allUsers.length < this.itemsPerPage) {
@@ -160,11 +160,11 @@ export class UserComponent implements OnInit, AfterViewInit {
     this.userProfileForm.patchValue({
       username: user.username,
       email: user.email,
-      countryCode:user.countryCode,
-      selectedCode:"selected :"+ user.countryCode,
-      phone:user.phone
+      countryCode: user.countryCode,
+      selectedCode: "selected :" + user.countryCode,
+      phone: user.phone
     });
-    this.countryId=user.countryId
+    this.countryId = user.countryId
     this.currentUserId = user._id;
   }
 
@@ -175,7 +175,7 @@ export class UserComponent implements OnInit, AfterViewInit {
     console.log(this.countryId)
 
     this.user2Service.editUser(userId, username, email, this.countryId, phone, profilePic).subscribe(
-      (response:User) => {
+      (response: User) => {
         if (response.success) {
           this.toastrService.success(response.message);
           let matchIndex = -1;//find and replace
@@ -193,8 +193,12 @@ export class UserComponent implements OnInit, AfterViewInit {
         }
       },
       (error) => {
-        console.error('Error editing user:', error);
-        this.toastrService.error('Error editing user');
+        console.error('Error editing user:', error.message);
+        if (error.error && error.error.message) {
+          this.toastrService.error(error.error.message);
+        } else {
+          this.toastrService.error('An error occurred while editing user.');
+        }
       }
     );
   }
@@ -209,7 +213,7 @@ export class UserComponent implements OnInit, AfterViewInit {
             if (index !== -1) {
               this.allUsers.splice(index, 1);
             }
-            if (this.allUsers.length===0) {
+            if (this.allUsers.length === 0) {
               this.currentPage--
               this.fetchUserData()
             }
@@ -255,7 +259,7 @@ export class UserComponent implements OnInit, AfterViewInit {
 
   search(): void {
     this.user2Service.searchUsers(this.search_query, this.currentPage, this.itemsPerPage).subscribe(
-      (response:UserSearchResponse) => {
+      (response: UserSearchResponse) => {
         if (response.success) {
           this.allUsers = response.users;
           this.totalItems = response.totalCount;
@@ -283,7 +287,7 @@ export class UserComponent implements OnInit, AfterViewInit {
   token!: string
   token_id!: string
   cardData!: CardData
-  cards:any[] = [];
+  cards: any[] = [];
   defaultCardId: string | null = null;
 
   createStripeElement() {
@@ -325,7 +329,7 @@ export class UserComponent implements OnInit, AfterViewInit {
   addCard() {
 
     this.CardService.addCard(this.CostomerId, this.token_id)
-      .subscribe((response:AddCardResponse) => {
+      .subscribe((response: AddCardResponse) => {
         // console.log(this.CostomerId)
         if (response.success) {
           // this.cardData=response
@@ -411,22 +415,22 @@ export class UserComponent implements OnInit, AfterViewInit {
     console.log(cardId)
     if (confirm("are you sure to delete card")) {
       this.CardService.deleteCard(this.CostomerId, cardId)
-      .subscribe(
-        (response: any) => {
-          if (response.success) {
-            const index = this.cards.findIndex(card => card.id === cardId);
-            this.totalItems--;
-            if (index !== -1) {
-              this.cards.splice(index, 1);
+        .subscribe(
+          (response: any) => {
+            if (response.success) {
+              const index = this.cards.findIndex(card => card.id === cardId);
+              this.totalItems--;
+              if (index !== -1) {
+                this.cards.splice(index, 1);
+              }
+              this.toastrService.success(response.message)
+              console.log('Card deleted successfully:', response);
             }
-            this.toastrService.success(response.message)
-            console.log('Card deleted successfully:', response);
+          },
+          (error: any) => {
+            console.error('Failed to delete card:', error);
           }
-        },
-        (error: any) => {
-          console.error('Failed to delete card:', error);
-        }
-      );
+        );
     }
   }
 
