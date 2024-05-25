@@ -13,8 +13,17 @@ const userRoutes=require('./routes/userRoutes')
 const driver_listRoutes=require('./routes/driverListRoutes')
 const settingRoutes=require('./routes/settingRoutes')
 const createRideRoutes=require('./routes/createRideRoutes')
+const confirmedRideRoutes=require('./routes/confirmedRideRoutes')
+// const socketService = require('./service/socketService');
+const initializeCronJob = require('./service/cron');
 const dotenv=require("dotenv").config();
 const app = express();
+
+// create socket 
+const http = require('http').Server(app);
+const initializeSocket = require("./service/socketService")
+// const server = http.Server(app);
+
 const port = process.env.port;
 
 mongoose.connect(process.env.mongo_path)
@@ -24,7 +33,7 @@ mongoose.connect(process.env.mongo_path)
 app.use(cors());
 app.use(bodyParser.json());
 
-const JWT_SECRET = 'secret_key'; 
+// const JWT_SECRET = 'secret_key'; 
 
 app.post('/login', async (req, res) => {
   const { username, password } = req.body;
@@ -37,7 +46,7 @@ app.post('/login', async (req, res) => {
   }
   if (user) {
     // const token = jwt.sign({ userId: user._id }, JWT_SECRET);
-    const token = jwt.sign({ userId: user._id }, JWT_SECRET, { expiresIn: '20m' });
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '20000000m' });
     res.json({ token });
   } 
 });
@@ -45,7 +54,7 @@ app.post('/login', async (req, res) => {
 function checkAuth(req, res, next) {
   const token = req.headers['authorization']; 
   if (token) {
-    jwt.verify(token, JWT_SECRET, (err, decoded) => {
+    jwt.verify(token,process.env.JWT_SECRET, (err, decoded) => {
       if (err) {
         return res.status(401).send('Unauthorized');
       } else {
@@ -68,7 +77,14 @@ app.use('/driverlist',checkAuth,driver_listRoutes);
 app.use('/setting',checkAuth,settingRoutes);
 // task-4 start
 app.use('/createride',createRideRoutes);
+app.use('/confirmedride',confirmedRideRoutes);
 
-app.listen(port, () => {
+
+
+// for the socket connection
+initializeSocket(http)
+  initializeCronJob();
+
+http.listen(port, () => {
   console.log(`Server is running at http://localhost:${port}`);
 });

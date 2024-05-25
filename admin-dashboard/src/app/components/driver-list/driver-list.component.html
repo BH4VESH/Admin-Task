@@ -1,5 +1,5 @@
 <!-- Button trigger modal -->
-<div class="container-fluid d-grid mb-2">
+<div class="container-fluid d-grid mb-2 pt-5">
     <button type="button" class="btn btn-secondary mt-2" data-bs-toggle="modal" data-bs-target="#exampleModal"
         (click)="btn_name_chenge(); resetForm()">
         Add Driver
@@ -7,7 +7,7 @@
 </div>
 
 <!-- Modal -->
-<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+<div class="modal fade " id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -77,7 +77,7 @@
                                     <label for="phone">Phone</label>
                                     <div class="input-group">
                                         <div class="input-group-prepend">
-                                            <select class="custom-select form-control" formControlName="countryCode" (change)="fetchCity($event)">
+                                            <select class="custom-select form-control" formControlName="countryCode" (click)="fetchCity($event)">
                                                 <option value="" disabled selected>Select Country Code</option>
                                                 <ng-container *ngFor="let country of countries">
                                                     <option [value]="country._id">
@@ -117,7 +117,7 @@
                                     <label for="city">city</label>
                                     <div class="input-group">
                                         <div class="input-group-prepend">
-                                            <select class="custom-select form-control" formControlName="city">
+                                            <select class="custom-select form-control" formControlName="city" >
                                                 <option value="" disabled>Select City</option>
                                                 <ng-container *ngFor="let city of cities">
                                                     <option [value]="city._id">{{ city.name }}</option>
@@ -163,7 +163,7 @@
 </div>
 
 <!-- User Table -->
-<div class="container-fluid">
+<div class="container-fluid ">
     <div class="row justify-content-center">
         <div class="col">
             <div class="table-responsive">
@@ -199,7 +199,7 @@
                             <td> <button type="button" class="btn" [ngClass]="{
                                 'btn-outline-danger': driver.status === true,
                                 'btn-outline-success': driver.status === false
-                              }" (click)="getCurrentId(driver);approveDecline()"> {{ driver.status ? 'Decline' :
+                              }" (click)="getCurrentId(driver);approveDecline(driver)"> {{ driver.status ? 'Decline' :
                                     'Approve' }}</button></td>
 
                             <td>
@@ -213,9 +213,9 @@
                                     <ul class=" dropdown-menu " aria-labelledby="dropdownMenu2">
                                         <div class="d-grid gap-2">
                                             <button type="button" data-bs-toggle="modal" data-bs-target="#exampleModal"
-                                                class="btn btn-outline-primary me-2"
+                                                class="btn btn-outline-primary ms-2 me-2"
                                                 (click)="editDriver(driver);getCurrentId(driver)">Edit</button>
-                                            <button type="button" class="btn btn-outline-danger me-2"
+                                            <button type="button" class="btn ms-2 btn-outline-danger me-2"
                                                 (click)="deleteDriver(driver._id)">Delete</button>
                                         </div>
 

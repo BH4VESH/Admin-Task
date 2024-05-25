@@ -8,11 +8,7 @@ import { CreateRideService } from '../../services/create-ride.service';
 import { Coordinate, User, getVehiclePrice } from '../../models/createRide';
 import { SettingService } from '../../services/setting.service';
 import { CityService } from '../../services/city.service';
-import { Cons, from, of, scheduled } from 'rxjs';
 import { CardService } from '../../services/card.service';
-import { CustomerCardsResponse } from '../../models/card';
-import { tick } from '@angular/core/testing';
-import { ThisReceiver } from '@angular/compiler';
 
 declare const google: any;
 
@@ -62,8 +58,6 @@ export class CreateRideComponent implements OnInit, AfterViewInit {
     private toastrService: ToastrService,
     private CreateRideService: CreateRideService,
     private SettingService: SettingService,
-    private CityService: CityService,
-    private CardService: CardService,
   ) {
     this.autocompleteService = new google.maps.places.AutocompleteService();
     this.directionsService = new google.maps.DirectionsService();
@@ -177,24 +171,10 @@ export class CreateRideComponent implements OnInit, AfterViewInit {
       }
       if (this.fromToInput.get('from')?.value && this.fromToInput.get('to')?.value) {
         this.drawPath();
+        this.calculate()
       }
     }
   }
-
-  // logAllValues(): void {
-  //   console.log('From:', (document.getElementById('from-input') as HTMLInputElement).value);
-  //   console.log("From coordinate :",this.fromMarker?.getPosition()?.toUrlValue())
-  //   console.log('To:', (document.getElementById('to-input') as HTMLInputElement).value);
-  //   console.log("To coordinate :",this.toMarker?.getPosition()?.toUrlValue())
-  //   this.stopsMarkers.forEach((marker, index) => {
-  //     console.log(`Stop ${index + 1} coordinates:`, marker.getPosition()?.toUrlValue());
-  //   });
-  //   this.stopInputs.forEach((_, index) => {
-  //     const stopInput: HTMLInputElement = document.getElementById(`stop-input-${index}`) as HTMLInputElement;
-  //     console.log(`Stop ${index + 1}:`, stopInput.value); // Log the value of the stop input
-  //   });
-  //   console.log(this.stopsMarkers)
-  // }
 
   trackByFn(index: number, item: any): number {
     return index;
@@ -265,6 +245,7 @@ export class CreateRideComponent implements OnInit, AfterViewInit {
   isPointInsidePolygon(searchPoint: { lat: number; lng: number; }, place: google.maps.places.PlaceResult, placeMarker: (place: google.maps.places.PlaceResult, type: 'from' | 'to' | 'stop') => void, type: 'from' | 'to' | 'stop') {
     // let inside = false;
     for (var i = 0; i < this.coordinates.length; i++) {
+
       if (google.maps.geometry.poly.containsLocation(searchPoint, this.coordinates[i])) {
         this.ifInsideZone = true;
 
@@ -275,6 +256,7 @@ export class CreateRideComponent implements OnInit, AfterViewInit {
         console.log("city id is:", this.users[i].city._id)
         break;
       }
+      
     }
     if (this.ifInsideZone) {
       this.toastrService.success('Point is inside polygon');
@@ -391,27 +373,10 @@ export class CreateRideComponent implements OnInit, AfterViewInit {
       this.duration = 0
       this.zoneCityId = ""
       // this.fromToInput.reset()
-      // this.resetMarkers()
+      // this.resetMarkersAndData()
     }
   }
-  // resetMarkers() {
-  //   if (this.fromMarker) {
-  //     this.fromMarker.setMap(null);
-  //     this.fromMarker = null;
-  //   }
-  //   if (this.toMarker) {
-  //     this.toMarker.setMap(null);
-  //     this.toMarker = null;
-  //   }
-  //   for (const stopMarker of this.stopsMarkers) {
-  //     stopMarker.setMap(null);
-  //   }
-  //   this.stopsMarkers = [];
-  //   if (this.directionsRenderer) {
-  //     this.directionsRenderer.setMap(null);
-  //     this.directionsRenderer = null;
-  //   }
-  // }
+ 
 
   calculateDistance(): void {
     const service = new google.maps.DistanceMatrixService();
@@ -641,115 +606,133 @@ export class CreateRideComponent implements OnInit, AfterViewInit {
     }
   }
   
+  // confirm ride
   showSelectionError=false 
   showPaymentError=false 
   showBookingError=false 
   showCalulateError=false
 
-  ConfirmRide(){
-    var fromValue = (document.getElementById('from-input') as HTMLInputElement).value
-    var toValue = (document.getElementById('to-input') as HTMLInputElement).value
-    const stopValue:string[]=[];
-    this.stopInputs.forEach((_, index) => {
-          const stopInput: HTMLInputElement = document.getElementById(`stop-input-${index}`) as HTMLInputElement;
-          stopValue.push(stopInput.value)
-          // console.log(`Stop ${index + 1}:`, stopInput.value); // Log the value of the stop input
-        });
-    // const fromLat = this.fromMarker?.getPosition()?.lat()
-    // const fromLng = this.fromMarker?.getPosition()?.lng()
-    
-    // const toLat = this.toMarker?.getPosition()?.lat()
-    // const toLng = this.toMarker?.getPosition()?.lng()
-    // const stopCoords: Coordinate[] = [];
-
-    // this.stopsMarkers.forEach((marker, index) => {
-    //   const position = marker.getPosition();
-    //   if (position) {
-    //     const coord: Coordinate = {
-    //       lat: position.lat(),
-    //       lng: position.lng()
-    //     };
-    //     stopCoords.push(coord);
-    //   }
-    // });
-
-    //service selection validation
-    console.log("payment optionn :",this.selectedPaymentOption)
-    if(this.selectedServiceId==''){
-      this.showSelectionError=true;
-    }else{
-      this.showSelectionError=false;
-    }
-    //service selection validation
-    if(this.selectedPaymentOption==''){
-      this.showPaymentError=true;
-    }else{
-      this.showPaymentError=false;
-    }
-    //booking selection validation
-    if(this.selectedBookingOption==''){
-      this.showBookingError=true;
-    }else{
-      this.showBookingError=false;
-    }
-    if (this.distance==undefined) {
-      this.showCalulateError=true
-    }else{
-      this.showCalulateError=false
-    }
-
-    // duration and distence comvet=>km/m
-    const durationParts = this.duration.split(', '); 
-    const hours = parseInt(durationParts[0], 10);
-    const minutes = parseInt(durationParts[2], 10);
-    const durationInMinutes = hours * 60 + minutes;
-
-    // shedule date and time
-    // let scheduledDate;
-    // if (this.selectedDate && this.selectedTime) {
-    //   scheduledDate = new Date(`${this.selectedDate}T${this.selectedTime}`);
-    // } else {
-    //   scheduledDate = new Date(); 
-    // }
-    // const datetimeString = `${this.selectedDate}T${this.selectedTime}`;
-
-// Create a new Date object using the datetime string
-// const scheduledDate = new Date(datetimeString);
-const [hoursStr, minutesStr] = this.selectedTime.split(':');
-const h = parseInt(hoursStr, 10);
-const m = parseInt(minutesStr, 10);
-const scheduledTime = h * 3600 + m * 60;
-    
-
-    const allRideData = {
-      userId:this.users[0]._id,
-      countryId: this.countryCallingCode,
-      cityId: this.zoneCityId,
-      vehicleId: this.selectedServiceId,
-      totalDistanceKm: this.distance,//km
-      totalDurationMin: durationInMinutes,//minuts
-      // fromCoord: { lat: fromLat, lng: fromLng },
-      // toCoord: { lat: toLat, lng: toLng },
-      fromLocation:fromValue,
-      toLocation:toValue,
-      // stopCoords,
-      stopValue,
-      estimeteFare: this.selectedestimeteFare,
-      paymentOption:this.selectedPaymentOption,
-      bookingOption:this.selectedBookingOption,
-      scheduledDate: new Date(this.selectedDate),
-      scheduledTimeSeconds:scheduledTime,
-    }
-
-    console.log(allRideData)
-
-    this.CreateRideService.saveRide(allRideData).subscribe((responce)=>{
-      if (responce.success) {
-        console.log("saved data : ",responce.ride)
-      }
-    })
-  
-
+  validateInputs() {
+    this.showCalulateError = (this.distance === undefined)||(this.distance==0);
+    this.showSelectionError = this.selectedServiceId === '';
+    this.showPaymentError = this.selectedPaymentOption === '';
+    this.showBookingError = this.selectedBookingOption === '';
   }
+
+  ConfirmRide() {
+    this.validateInputs();
+
+    // date validation
+      if (this.selectedBookingOption==='Schedule' && (this.selectedDate=='') && (this.selectedTime=='')) {
+        this.toastrService.error("select schedule date and time")
+        return
+      }
+      if (this.selectedBookingOption==='Schedule' && this.selectedTime=='') {
+        this.toastrService.error("select schedule time")
+        return
+      }
+      
+    if (!this.showCalulateError && !this.showSelectionError && !this.showPaymentError && !this.showBookingError && !this.showDateError && !this.showTimeError) {
+
+
+      var fromValue = (document.getElementById('from-input') as HTMLInputElement).value
+      var toValue = (document.getElementById('to-input') as HTMLInputElement).value
+      const stopValue: string[] = [];
+
+      this.stopInputs.forEach((_, index) => {
+        const stopInput: HTMLInputElement = document.getElementById(`stop-input-${index}`) as HTMLInputElement;
+        stopValue.push(stopInput.value)
+      });
+
+      // duration and distence comvet=>km/m
+      const durationParts = this.duration.split(', ');
+      const hours = parseInt(durationParts[0], 10);
+      const minutes = parseInt(durationParts[2], 10);
+      const durationInMinutes = hours * 60 + minutes;
+
+      // shedule date and time
+      let scheduledDate;
+      let scheduledTime;
+      if (this.selectedDate && this.selectedTime) {
+        scheduledDate = new Date(this.selectedDate);
+        const [hoursStr, minutesStr] = this.selectedTime.split(':');
+        const h = parseInt(hoursStr, 10);
+        const m = parseInt(minutesStr, 10);
+        scheduledTime = h * 3600 + m * 60;
+      } else {
+        scheduledDate = new Date();
+      }
+      const allRideData = {
+        userId: this.users[0]._id,
+        countryId: this.countryCallingCode,
+        cityId: this.zoneCityId,
+        vehicleId: this.selectedServiceId,
+        totalDistanceKm: this.distance,//km
+        totalDurationMin: durationInMinutes,//minuts
+        fromLocation: fromValue,
+        toLocation: toValue,
+        stopValue,
+        estimeteFare: this.selectedestimeteFare,
+        paymentOption: this.selectedPaymentOption,
+        bookingOption: this.selectedBookingOption,
+        scheduledDate: scheduledDate,
+        scheduledTimeSeconds: scheduledTime,
+      }
+      console.log(this.showPaymentError)
+      this.CreateRideService.saveRide(allRideData).subscribe((responce) => {
+        if (responce.success) {
+          console.log("saved data : ", responce.ride)
+          this.toastrService.success(responce.message)
+          this.resetMarkersAndData()
+          this.fromToInput.reset()
+          this.stopInputs = []
+          this.distance = 0
+          this.duration = 0
+          this.priceData = []
+          this.selectedServiceId= ''
+          this.selectedPaymentOption = ''
+          this.selectedBookingOption = ''
+          this.selectedDate=''
+          this.selectedTime=''
+        }
+      })
+    } else {
+      this.toastrService.error("Please fill all error fields")
+    }
+  }
+
+  resetMarkersAndData() {
+    if (this.fromMarker) {
+      this.fromMarker.setMap(null);
+      this.fromMarker = null;
+    }
+    if (this.toMarker) {
+      this.toMarker.setMap(null);
+      this.toMarker = null;
+    }
+    for (const stopMarker of this.stopsMarkers) {
+      stopMarker.setMap(null);
+    }
+    this.stopsMarkers = [];
+    if (this.directionsRenderer) {
+      this.directionsRenderer.setMap(null);
+      this.directionsRenderer = null;
+    }
+  }
+
+  // logAllValues(): void {
+  //   console.log('From:', (document.getElementById('from-input') as HTMLInputElement).value);
+  //   console.log("From coordinate :",this.fromMarker?.getPosition()?.toUrlValue())
+  //   console.log('To:', (document.getElementById('to-input') as HTMLInputElement).value);
+  //   console.log("To coordinate :",this.toMarker?.getPosition()?.toUrlValue())
+  //   this.stopsMarkers.forEach((marker, index) => {
+  //     console.log(`Stop ${index + 1} coordinates:`, marker.getPosition()?.toUrlValue());
+  //   });
+  //   this.stopInputs.forEach((_, index) => {
+  //     const stopInput: HTMLInputElement = document.getElementById(`stop-input-${index}`) as HTMLInputElement;
+  //     console.log(`Stop ${index + 1}:`, stopInput.value); // Log the value of the stop input
+  //   });
+  //   console.log(this.stopsMarkers)
+  // }
 
 }

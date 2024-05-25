@@ -15,6 +15,7 @@ import { Driver, DriverServiceType, FatchDriver, UserSearchResponse } from '../.
 import { VehicleType } from '../../models/vihicle-type';
 import { Zone } from '../../models/zone';
 import { Country } from '../../models/country';
+import { SocketService } from '../../services/socket.service';
 
 @Component({
   selector: 'app-driver-list',
@@ -51,6 +52,7 @@ export class DriverListComponent implements OnInit {
     private countryService: CountryService,
     private toastrService: ToastrService,
     private VehicleService: VehicleService,
+    private SocketService:SocketService
   ) {
     this.userProfileForm = this.fb.group({
       profilePic: ['', Validators.required],
@@ -69,6 +71,8 @@ export class DriverListComponent implements OnInit {
     // this.fetchCities()
     this.fetchDriverData();
     this.fetchVehicle();
+    this.getDriverStatus()
+    this.getDriverService()
 
   }
   btn_name_chenge() {
@@ -293,7 +297,7 @@ export class DriverListComponent implements OnInit {
       }
     );
   }
-
+  
   onVehicleSelectionChange(event: Event): void {
     const target = event.target as HTMLInputElement;
     if (target) {
@@ -301,6 +305,9 @@ export class DriverListComponent implements OnInit {
       console.log(this.selectVehicleId)
     }
   }
+
+  // --------------service update using socket
+
   saveService() {
     const serviceId = this.selectVehicleId;
     this.DriverListService.addService(this.currentDriverId, serviceId).subscribe((driver:DriverServiceType) => {
@@ -318,7 +325,26 @@ export class DriverListComponent implements OnInit {
 
       }
     });
+// --------------------socket
+    // this.SocketService.updatedriverService(this.currentDriverId,serviceId)
+    // over---------------------
   }
+  getDriverService(){
+    
+    this.SocketService.onUpdateServiceData().subscribe({
+      next: (response) => {
+        
+        this.fetchDriverData();
+        this.toastrService.success(response.message);
+      },
+    error: (error: any) => {
+        console.log(error);
+        this.toastrService.error(error.error.message)
+      }
+  })
+  }
+
+
   isSelected(vehicleId: string): boolean {
     return vehicleId === this.selectVehicleId;
     // return vehicleId === 'non';
@@ -331,7 +357,12 @@ export class DriverListComponent implements OnInit {
       this.selectVehicleId = selectDriver.serviceID
     }
   }
-  approveDecline() {
+
+  // --------------status update using socket
+
+  approveDecline(driver:any) {
+    const status = !driver.status;
+    console.log(status,driver._id)
     this.DriverListService.addStatus(this.currentDriverId).subscribe(
       (response:DriverServiceType) => {
         console.log(response)
@@ -343,11 +374,26 @@ export class DriverListComponent implements OnInit {
           }
         }
         console.log(this.allUsers)
+    // this.SocketService.updatedriverStatus(this.currentDriverId,status)
       },
       (error) => {
         console.error(error);
         this.toastrService.error('An error occurred');
       }
     );
+  }
+  getDriverStatus(){
+    
+    this.SocketService.onUpdateStatusData().subscribe({
+      next: (response) => {
+        
+        this.fetchDriverData();
+        this.toastrService.success(response.message,  'Success');
+      },
+    error: (error: any) => {
+        console.log(error);
+        this.toastrService.error(error.error.message)
+      }
+  })
   }
 }

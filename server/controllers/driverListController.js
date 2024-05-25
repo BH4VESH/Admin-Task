@@ -389,7 +389,9 @@ console.log(Drivers)
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
-// add service
+
+// add service ------------------it is update using socket in the socket file
+
 exports.addService = async (req, res) => {
   const driverId = req.params.id;
   const serviceId = req.body.serviceId;
@@ -425,7 +427,12 @@ exports.addService = async (req, res) => {
           }
         ]
       )
-      res.json({ success: true, message: 'Service Set Successfull', service: service[0] });
+      // res.json({ success: true, message: 'Service Set Successfull', service: service[0] });
+      io.emit("servicedata", {
+        success: true,
+        message: 'Service Set Successfull',
+         service: service[0]
+      });
     }
     else {
 
@@ -458,14 +465,22 @@ exports.addService = async (req, res) => {
           }
         ]
       )
-      res.json({ success: true, message: 'Service Added Successfull', service: service[0] });
+      // res.json({ success: true, message: 'Service Added Successfull', service: service[0] });
+      io.emit("servicedata", {
+        success: true,
+        message: 'Service Added Successfull',
+         service: service[0]
+      });
     }
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
   }
 }
-// add status
+
+
+
+// add status------------------it is update using socket in the socket file
 exports.addStatus = async (req, res) => {
   const driverId = req.params.id;
 
@@ -475,12 +490,22 @@ exports.addStatus = async (req, res) => {
     if (!toggle) {
       const newToggle = new Driver({ driverId, status: true });
       await newToggle.save();
-      return res.json({ message: 'Status set to true', status: true });
+      // return res.json({ message: 'Status set to true', status: true });
+      global.io.emit("statusdata", {
+        success: true,
+        status: toggle.status,
+        message: "Driver Status Updated Successfully.",
+      });
     } else {
       toggle.status = !toggle.status;
       await toggle.save();
       const message = toggle.status ? 'Status set to true' : 'Status set to false';
-      return res.json({ message, status: toggle.status });
+      // return res.json({ message, status: toggle.status });
+      global.io.emit("statusdata", {
+                  success: true,
+                  status: toggle.status,
+                  message: "Driver Status Updated Successfully.",
+                });
     }
   } catch (err) {
     console.error(err);

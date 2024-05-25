@@ -8,7 +8,8 @@ const userSchema = new mongoose.Schema({
   username: { type: String },
   email: { type: String, unique: true },
   phone: { type: String, unique: true },
-  status:{type:Boolean,default: false}
+  status:{type:Boolean,default: false},
+  assign: {type: String,default: "0"},
 });
 
 const Driver = mongoose.model('Driver_list', userSchema);

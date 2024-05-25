@@ -1,0 +1,276 @@
+const SaveRideModel = require('../models/createRide');
+const User = require('../models/userModel');
+const {mongoose } = require('mongoose');
+
+// first get all ride
+exports.getRideList = async (req, res) => {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 5;
+    console.log(req.query)
+  
+    try {
+      const rideList = await SaveRideModel.aggregate([
+        // {
+        //   $match: {
+        //     ridestatus:0
+        //   }
+        // },
+        {
+          $lookup: {
+            from: "users",
+            localField: "userId",
+            foreignField: "_id",
+            as: "user",
+          },
+        },
+        {
+          $unwind: {
+            path: "$user",
+          },
+        },
+        {
+          $lookup: {
+            from: "zones",
+            localField: "cityId",
+            foreignField: "_id",
+            as: "city",
+          },
+        },
+        {
+          $unwind: {
+            path: "$city",
+          },
+        },
+        {
+          $lookup: {
+            from: "countries",
+            localField: "countryId",
+            foreignField: "_id",
+            as: "country",
+          },
+        },
+        {
+          $unwind: {
+            path: "$country",
+          },
+        },
+  
+        {
+          $lookup: {
+            from: "vehicles",
+            localField: "vehicleId",
+            foreignField: "_id",
+            as: "service",
+          },
+        },
+        {
+          $unwind: {
+            path: "$service",
+          },
+        },
+        {
+          $lookup: {
+            from: "driver_lists",
+            localField: "driverId",
+            foreignField: "_id",
+            as: "driver",
+          },
+        },
+        {
+          $unwind: {
+            path: "$driver",
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
+          $addFields: {
+            date: {
+              $dateToString: {
+                format: "%Y-%m-%d",
+                date: "$scheduledDate",
+              },
+            },
+          },
+        },
+        {
+          $skip: (page - 1) * limit
+        },
+        {
+          $limit: limit
+        }
+      ])
+  
+      const totalItems = await SaveRideModel.countDocuments();
+      console.log("totoalItem :",totalItems)
+  
+      res.status(200).json({ success: true, rideList, totalItems });
+    } catch (error) {
+      res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+  };
+
+
+// search ride
+
+exports.searchRides = async (req, res) => {
+  try {
+    let page = parseInt(req.body.page) || 1;
+    let limit = parseInt(req.body.limit) || 5;
+    // console.log(page,limit)
+
+    let search = req.body.search;
+    let statusSearch = parseInt(req.body.statusSearch, 10);
+    let vehicleSearch = req.body.vehicleSearch;
+
+    console.log(req.body);
+    
+        const matchStage = {};
+        if (search) {
+          var searchObjectId;
+    
+          if (search.length == 24) {
+            searchObjectId = new mongoose.Types.ObjectId(search);
+          }
+    
+          matchStage.$or = [
+            { "user.username": { $regex: search, $options: "i" } },
+            { "user.phone": { $regex: search, $options: "i" } },
+            { _id: searchObjectId },
+            { date: { $regex: search, $options: "i" } },
+          ];
+        }
+    
+        const matchCriteria = [];
+        
+        if (statusSearch !== -1) {
+          matchCriteria.push({ ridestatus: { $in: [statusSearch] } });
+        }else if (statusSearch === -1) {
+          matchCriteria.push({ ridestatus: { $nin: [3, 7] } });
+        }
+        
+        if (vehicleSearch && vehicleSearch.length > 0) {
+          matchCriteria.push({ vehicleId: new mongoose.Types.ObjectId(vehicleSearch) });
+        }
+        
+        if (matchCriteria.length === 0) {
+          matchCriteria.push({});
+        }
+        
+
+
+    const aggregationPipeline = [
+     
+
+      {
+        $lookup: {
+          from: "users",
+          localField: "userId",
+          foreignField: "_id",
+          as: "user",
+        },
+      },
+      {
+        $unwind: {
+          path: "$user",
+        },
+      },
+      {
+        $lookup: {
+          from: "zones",
+          localField: "cityId",
+          foreignField: "_id",
+          as: "city",
+        },
+      },
+      {
+        $unwind: {
+          path: "$city",
+        },
+      },
+      {
+        $lookup: {
+          from: "countries",
+          localField: "countryId",
+          foreignField: "_id",
+          as: "country",
+        },
+      },
+      {
+        $unwind: {
+          path: "$country",
+        },
+      },
+
+      {
+        $lookup: {
+          from: "vehicles",
+          localField: "vehicleId",
+          foreignField: "_id",
+          as: "service",
+        },
+      },
+      {
+        $unwind: {
+          path: "$service",
+        },
+      },
+      {
+        $lookup: {
+          from: "driver_lists",
+          localField: "driverId",
+          foreignField: "_id",
+          as: "driver",
+        },
+      },
+      {
+        $unwind: {
+          path: "$driver",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $addFields: {
+          date: {
+            $dateToString: {
+              format: "%Y-%m-%d",
+              date: "$scheduledDate",
+            },
+          },
+        },
+      },
+
+      {
+        $match: {
+          $and: [...matchCriteria, matchStage],
+        },
+      },
+
+    ];
+
+    
+    
+    const totalItemsResult = await SaveRideModel.aggregate(aggregationPipeline);
+    const totalItems = totalItemsResult.length 
+
+    aggregationPipeline.push(
+      {
+        $skip: (page - 1) * limit
+      },
+      {
+        $limit: limit
+      }
+    );
+
+    const searchResult = await SaveRideModel.aggregate(aggregationPipeline);
+    
+    res.json({ success: true, result: searchResult, totalItems });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
+
+
+
+

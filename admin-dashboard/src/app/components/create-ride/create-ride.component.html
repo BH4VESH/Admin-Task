@@ -1,4 +1,4 @@
-<div class="container-fluid ">
+<div class="container-fluid">
     <div class="row mt-5">
         <div class="col-xl-4 col-lg-4 col-xxl-4 col-md-4 col-sm-12  d-flex justify-content-center">
             <div class="row mt-3 mb-3 ">
@@ -50,7 +50,7 @@
                     <!-- Submit Button -->
                     <div class="d-grid gap-2 mt-3">
                         <button type="submit" [disabled]="userPhoneInput.invalid" (click)="searchUsers()"
-                            class="btn btn-primary btn-block">search User</button>
+                            class="btn btn-primary btn-block text-dark">search User</button>
                     </div>
                     <div class="d-grid gap-2 mt-3" *ngIf="showUserSection">
                         <button type="submit" [disabled]="userPhoneInput.invalid" (click)="nextBtn()"
@@ -115,12 +115,12 @@
     <!-- bellow part -->
     <!-- left side -->
     <div class="row d-flex mt-4" [ngClass]="{ 'd-none': !fromTo}">
-        <div class="col-xl-6 col-lg-6 col-xxl-6 col-md-6 col-sm-12   border text-center">
+        <div class="col-xl-6 col-lg-6 col-xxl-6 col-md-6 col-sm-12    text-center">
             <div >
                 <ul class="list-group pe-3 ps-3">
                     <li class="list-group-item d-flex justify-content-between align-items-center  ">
                         <b>Total Distance :</b>
-                        <span class="badge bg-dark rounded-pill">{{distance}}</span>
+                        <span class="badge bg-dark rounded-pill">{{distance }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center">
                         <b>Total time :</b>
@@ -133,7 +133,7 @@
                 <ul class="list-group pe-3 ps-3" *ngFor="let priceData of priceData">
                     <li class="list-group-item d-flex justify-content-between align-items-center ">
                         <b>{{priceData.vehicleName}}|Estimate fare :</b>
-                        <span class="badge bg-dark rounded-pill">{{priceData.ServiceFees}}</span>
+                        <span class="badge bg-dark rounded-pill">₹ {{priceData.ServiceFees | number: '1.2-2'}}</span>
                     </li>
                 </ul>
             </div>
@@ -145,7 +145,7 @@
         </div>
 
         <!-- right side -->
-        <div class="col-xl-6 col-lg-6 col-xxl-6 col-md-6 col-sm-12  border text-center">
+        <div class="col-xl-6 col-lg-6 col-xxl-6 col-md-6 col-sm-12  text-center">
             <!-- select service -->
             <div class="col-lg-8 col-md-8 col-auto">
                 <div class="form-floating mb-3">
