@@ -4,6 +4,8 @@ const driverModel = require('../models/driverListModel');
 const Setting =require('../models/settingModel')
 const mongoose = require("mongoose");
 
+
+
 // const TIMEOUT_DURATION = 10000;
 
 async function fetchSettings() {
@@ -38,6 +40,7 @@ cron.schedule('* * * * * *', async () => {
 
     try {
       console.log('Cron job executed..............................................');
+
       // -------------------if direct assign driver
       const currentTime = new Date();
       const timeoutTime = new Date(currentTime.getTime() - TIMEOUT_DURATION);
@@ -71,11 +74,13 @@ cron.schedule('* * * * * *', async () => {
 
             var driverdata = await driverModel.findByIdAndUpdate(request.driverId, { $set: { assign: 0 } }, { new: true });
 
+            global.counter++
             global.io.emit("cronUpdateData", {
               success: true,
               message: "timeoutdata",
               ridedata,
-              driverdata
+              driverdata,
+              counter
             });
 
             // console.log(request.driverId)
@@ -386,7 +391,7 @@ cron.schedule('* * * * * *', async () => {
               message: "timeoutdata",
               driverdata,
               ridedata,
-              updatedata:updatedata[0]
+              updatedata:updatedata[0],
             });
             console.log("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
 
@@ -435,11 +440,14 @@ cron.schedule('* * * * * *', async () => {
                   assigned: "pending"
                 }, { new: true });
 
+                global.counter++
+
                 global.io.emit("cronUpdateData2C", {
                     success: true,
                     message: "timeoutdata",
                     driverdata,
-                    ridedata
+                    ridedata,
+                    counter
                   });
 
                   console.log("CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC")

@@ -4,6 +4,8 @@ import { ToastrService } from 'ngx-toastr';
 import { SocketService } from '../../services/socket.service';
 import { DurationConvertPipe } from "../../pipes/duration-convert.pipe";
 import { SettingService } from '../../services/setting.service';
+import { RunningRequestService } from '../../services/running-request.service';
+import { NotificationService } from '../../services/notification.service';
 
 @Component({
     selector: 'app-running-request',
@@ -26,9 +28,36 @@ export class RunningRequestComponent implements OnInit {
   constructor(
     private ToastrService:ToastrService,
     private SocketService:SocketService,
-    private Setting:SettingService
+    private Setting:SettingService,
+    private RunningRequestService:RunningRequestService,
+    private NotificationService:NotificationService
 
-  ){}
+  ){
+    this.NotificationService.requestPermission();
+  }
+
+  acceptNotification() { 
+  const data:any={
+      'title': 'Accept',
+      'alertContent': 'Driver Accepted Request...'
+    };
+    this.NotificationService.generateNotification(data);
+  }
+  rejectNotification() { 
+  const data:any={
+      'title': 'Reject',
+      'alertContent': 'Driver Reject Request...'
+    };
+    this.NotificationService.generateNotification(data);
+  }
+  driverNotFoundNotifi() { 
+  const data:any={
+      'title': 'Driver Status',
+      'alertContent': 'Driver is not found...'
+    };
+    this.NotificationService.generateNotification(data);
+  }
+
 
   getUserPic(iconName: string): string {
     return `http://localhost:3000/uploads/userProfilePic/${iconName}`;
@@ -50,15 +79,11 @@ export class RunningRequestComponent implements OnInit {
     this.listingCronUpdate2B()
     this.listingCronUpdate2C()
     this.gettingFinalAssignClick()
-    // this.assigneddriverfromAssignDialogBox();
-    // this.afterrejectrunningrequest();
-    // this.ridestatusupates()
-    // this.timeoutrunningreq()
-    // this.listeningwhendriverisnearest()
-    // this.listeningmytaskfunc()
     this.listennearestassignbuttonclick()
     this.rejectDriverRequestlisn()
     this.listenassignrejected()
+    this.ridestatusupates()
+    // this.listeningmytaskfunc()
   }
 
   getRunningData() {
@@ -133,6 +158,7 @@ export class RunningRequestComponent implements OnInit {
 
   listingCronUpdate2A(){
     this.SocketService.listenForUpdateData2A().subscribe((res:any) => {
+      console.log("2A",res)
       // this.getRunningData()
       //  console.log('Received data(rideId):', res.cronRide.ridedata._id);
       //  console.log('Received data():', res.cronRide.driverdata._id);
@@ -170,12 +196,13 @@ export class RunningRequestComponent implements OnInit {
   listingCronUpdate2C(){
     this.SocketService.listenForUpdateData2C().subscribe((res:any) => {
 
+      console.log(res)
       // this.getRunningData()
       // removeObjectById(assignedArray, res.cronRide.ridedata._id);
-      const delet=this.assignedArray.filter(element => element._id !==  res.cronRide.ridedata._id);
-      this.assignedArray=delet
+      const updated=this.assignedArray.filter(element => element._id !==  res.cronRide.ridedata._id);
+      this.assignedArray=updated
       const index = this.assignedArray.findIndex(ride => ride._id === res.cronRide.ridedata._id);
-        
+      this.driverNotFoundNotifi()
    
     });
   }
@@ -232,8 +259,9 @@ export class RunningRequestComponent implements OnInit {
       driverId: driverId
     }
 
-    this.SocketService.emitrejectRunningRequest(data)
-    this.getRunningData()
+    this.RunningRequestService.rejectRide(data).subscribe((res)=>{
+      console.log("rejected")
+    })
   }
 
   // ---------------------reject driver-------------------
@@ -241,11 +269,13 @@ export class RunningRequestComponent implements OnInit {
     this.SocketService.listenrejectRunningRequest().subscribe(data=>{
       console.log("rejected data :",data)
       this.getRunningData()
+      this.rejectNotification()
     })
   }
   listenassignrejected(){
     this.SocketService.listenassignrejected().subscribe(data=>{
       this.getRunningData()
+      this.rejectNotification()
     })
   }
 
@@ -254,37 +284,99 @@ export class RunningRequestComponent implements OnInit {
   // ------------------accept ride------------
     acceptRide(data: any){
       console.log(data);
-      this.rideId = data._id
-      this.driverId = data.driverId
-  
-      // this.acceptrunningrequest(this.driverId, this.rideId);
+    
+      const dataA = {
+        rideId: data._id,
+        driverId: data.driverId
+      }
+
+      this.RunningRequestService.acceptRide(dataA).subscribe((res)=>{
+        console.log(res,"aaaaaaaaaaaaaaaaaaaaaa")
+      })
     }
 
-    // arriveRide(data: any){
-    //   this.rideId = data._id
-  
-    //   this.arrivedrunningrequest(this.driverId, this.rideId);
-    // }
 
-    // pickRide(data: any){
-    //   this.rideId = data._id
-  
-    //   this.pickedrunningrequest(this.driverId, this.rideId);
-    // }
-  
-    // startRide(data: any){
-    //   this.rideId = data._id
-  
-    //   this.startedrunningrequest(this.driverId, this.rideId);
-    // }
 
-    // completeRide(data: any){
-    //   // console.log(data);
-    //   this.rideId = data._id
-    //   this.driverId = data.driverId
+
+    arriveRide(data: any){
+
+      const dataB = {
+        rideId: data._id,
+      }
+    
+     
+      this.RunningRequestService.arriveRide(dataB).subscribe((res)=>{
+        console.log(res,"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbb")
+      })
+    }
+
+    pickRide(data: any){
   
-    //   this.completedrunningrequest(this.driverId, this.rideId);
-    // }
+      const dataC = {
+        rideId: data._id,
+      }
+      
+      this.RunningRequestService.pickRide(dataC).subscribe((res)=>{
+        console.log(res,"ccccccccccccccccccccccccc")
+      })
+    }
+  
+    startRide(data: any){
+  
+      const dataD = {
+        rideId: data._id,
+      }
+      
+      this.RunningRequestService.startRide(dataD).subscribe((res)=>{
+        console.log(res,"ddddddddddddddddddd")
+      })
+    }
+
+    completeRide(data: any){
+      // console.log(data);
+      const dataE = {
+        rideId: data._id,
+        driverId: data.driverId
+      }
+      
+      this.RunningRequestService.completeRide(dataE).subscribe((res)=>{
+        console.log(res,"eeeeeeeeeeeeeeeeee")
+      })
+      this.acceptNotification()
+    }
+
+    freerideanddriver(data: any){
+
+      const dataF = {
+        rideId: data._id,
+        driverId: data.driverId
+      }
+      
+      this.RunningRequestService.freerideanddriver(dataF).subscribe((res)=>{
+        console.log(res,"ffffffffffffffffffff")
+      })
+
+    }
+
+    // -----------------accept btn listning
+    ridestatusupates() {
+      this.SocketService.listeningrideupdates().subscribe((res: any) => {
+        // console.log("compaleeeeeeeeeeee",res.ridestatus)
+        console.log("counterrrrrrrrrr",res.counter2)
+        console.log("compaleeeeeeeeeeeeride",res.ride.ridestatus)
+        const index = this.assignedArray.findIndex(ride => ride._id === res.ride._id);
+
+        if (index !== -1) {
+          if(res.ride.driverId==null){
+            this.assignedArray[index].ridestatus=res.ride.ridestatus
+            this.assignedArray.splice(index, 1);
+          }else{
+            this.assignedArray[index].ridestatus=res.ride.ridestatus
+          }
+        }
+        // this.getRunningData()
+      } );
+    }
  
 
 }

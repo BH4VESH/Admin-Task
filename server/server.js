@@ -14,10 +14,13 @@ const driver_listRoutes=require('./routes/driverListRoutes')
 const settingRoutes=require('./routes/settingRoutes')
 const createRideRoutes=require('./routes/createRideRoutes')
 const confirmedRideRoutes=require('./routes/confirmedRideRoutes')
+const runningRequestRoutes=require('./routes/runningRequestRoutes')
 // const socketService = require('./service/socketService');
 const initializeCronJob = require('./service/cron');
 const dotenv=require("dotenv").config();
 const app = express();
+
+global.counter=0
 
 // create socket 
 const http = require('http').Server(app);
@@ -78,6 +81,7 @@ app.use('/setting',checkAuth,settingRoutes);
 // task-4 start
 app.use('/createride',createRideRoutes);
 app.use('/confirmedride',confirmedRideRoutes);
+app.use('/runningride',runningRequestRoutes);
 
 
 

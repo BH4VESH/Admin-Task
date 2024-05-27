@@ -179,11 +179,6 @@ emitRunningData() {
   this.socket.emit('runningrequest')
 }
 
-//-------------------single driver reject
-emitrejectRunningRequest(data: any){
-  console.log("service data :",data);
-  this.socket.emit('Rejectrunningrequest', data)
-}
 
 listenrejectRunningRequest(): Observable<any>  {
 
@@ -209,5 +204,16 @@ listenassignrejected(): Observable<any>  {
   })
 }
 
+
+
+listeningrideupdates(): Observable<any>  {
+  
+  return new Observable(observer => {
+    this.socket.on("rideupdates", (data: any) => {
+      // console.log(data)
+      observer.next(data)
+    })
+  })
+}
 
 }

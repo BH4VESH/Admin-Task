@@ -58,6 +58,7 @@ export class ConfirmedRidesComponent implements OnInit {
     this.listingCronUpdate2C()
     this.rejectDriverRequestlisn()
     this.listenassignrejected()
+    this.ridestatusupates()
 
   }
 
@@ -489,6 +490,25 @@ export class ConfirmedRidesComponent implements OnInit {
     this.SocketService.listenassignrejected().subscribe(data=>{
       this.fetchRideList()
     })
+  }
+
+   // -----------------accept btn listning
+   ridestatusupates() {
+    this.SocketService.listeningrideupdates().subscribe((res: any) => {
+      console.log("sssssssssssssssssssssssssss",res.ride.ridestatus)
+      const index = this.allRideList.findIndex(ride => ride._id === res.ride._id);
+
+      if (index !== -1) {
+        if(res.ride.driverId==null){
+          this.allRideList[index].ridestatus=res.ride.ridestatus
+          this.allRideList[index].driverId=null
+        }else{
+          this.allRideList[index].ridestatus=res.ride.ridestatus
+        }
+      }
+      // this.fetchRideList()
+
+    } );
   }
 
 
