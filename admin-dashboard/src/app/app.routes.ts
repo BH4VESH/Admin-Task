@@ -17,6 +17,7 @@ import { ConfirmedRidesComponent } from './components/confirmed-rides/confirmed-
 import { RunningRequestComponent } from './components/running-request/running-request.component';
 import { RideHistoryComponent } from './components/ride-history/ride-history.component';
 
+
 export const routes: Routes = [
     { path: '', redirectTo:'/login', pathMatch: 'full' },
     { path: 'login', component: LoginComponent },

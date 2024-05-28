@@ -15,6 +15,7 @@ const settingRoutes=require('./routes/settingRoutes')
 const createRideRoutes=require('./routes/createRideRoutes')
 const confirmedRideRoutes=require('./routes/confirmedRideRoutes')
 const runningRequestRoutes=require('./routes/runningRequestRoutes')
+const ridedHistoryRoutes=require('./routes/ridedHistoryRoutes')
 // const socketService = require('./service/socketService');
 const initializeCronJob = require('./service/cron');
 const dotenv=require("dotenv").config();
@@ -82,6 +83,7 @@ app.use('/setting',checkAuth,settingRoutes);
 app.use('/createride',createRideRoutes);
 app.use('/confirmedride',confirmedRideRoutes);
 app.use('/runningride',runningRequestRoutes);
+app.use('/ridehistory',ridedHistoryRoutes);
 
 
 

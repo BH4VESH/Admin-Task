@@ -83,11 +83,7 @@ onFinalassignedDriverData(data: String): Observable<any> {
   });
 } 
 
-//  // --------------------- cancel ride btn(confirm ride)--------------------
-  emitcancelride(rideId: any) {
-    this.socket.emit('cancelride', rideId)
-  }
-
+//  // --------------------- cancel ride btn lsn(confirm ride)--------------------
   listencancelride(): Observable<any> {
 
     return new Observable(observer => {

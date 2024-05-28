@@ -28,7 +28,7 @@ export class ConfirmedRidesComponent implements OnInit {
 
   currentPage: number = 1;
   totalItems: number = 0;
-  itemsPerPage: number = 5;
+  itemsPerPage: number = 3;
 
   allRideList:any[]=[]
   vehicleList:any[]=[]
@@ -49,7 +49,8 @@ export class ConfirmedRidesComponent implements OnInit {
     // this.performSearch()
     this.getVehicle()
     // this.getDriverData()
-    this.assigndriverdata()
+    // this.assigndriverdata()
+    this.deletLisn()
     this.gettingstatusafterassigninCFR()
     this.listennearestassignbuttonclick()
     this.listingCronUpdate()
@@ -108,15 +109,23 @@ export class ConfirmedRidesComponent implements OnInit {
 
 
   performSearch() {
-    this.search = this.searchText || this.searchDate;
     // Call your API service method to perform the search
-    this.ConfirmedRidesService.searchRides(this.statusSearch,this.vehicleSearch,this.search,this.currentPage,this.itemsPerPage).subscribe((result) => {
+    this.ConfirmedRidesService.searchRides(this.statusSearch,this.vehicleSearch,this.searchText,
+      this.searchDate,this.currentPage,this.itemsPerPage).subscribe((result) => {
       // Handle the search result here
       // this.allRideList=[]
       this.allRideList=result.result
       this.totalItems=result.totalItems
       console.log('Search Result:', result);
     });
+  }
+  
+  clearFields() {
+    this.statusSearch = -1;
+    this.vehicleSearch = '';
+    this.searchText = '';
+    this.searchDate = '';
+    this.fetchRideList()
   }
 
   // info
@@ -145,34 +154,13 @@ export class ConfirmedRidesComponent implements OnInit {
   getDriverPic(iconName: string): string {
     return `http://localhost:3000/uploads/driver_list_profile/${iconName}`;
   }
-  // info
 
-  // socket service//////////////////////////////////////////////
-//  asignBtn(driverId:string,rideId:string){
-//   console.log("component btn click")
-//   this.SocketService.emitassignedDriver(driverId  , rideId)
-//  }
-
-//   //---------SHOW UPDATED STATUS IN CFR AFTER ASSIGN BUTTON CLICK-----------------//
-//   gettingstatusafterassigninCFR(){
-//     this.SocketService.onFinalassignedDriverData('data').subscribe((response: any)=> {
-      
-//       // this.allRideList=[]
-//       this.fetchRideList();
-//       // this.allRideList=response.alldata;
-//       console.log("socket arrive data assign :",response.alldata)
-//     })
-//   }
 
   // ///////////////////////////////assign btn  model///////////
 
   dataArray: any[] = [];
   driverArray: any[] = [];
-  // search!: string;
-  // currentPage!: number;
-  // limit!: number;
-  // selectedSortBy!: string;
-  // selectedSortOrder!: string;
+ 
   cityId: any;
   serviceId: any;
   rideId:any
@@ -185,43 +173,6 @@ export class ConfirmedRidesComponent implements OnInit {
       this.dataArray=[ride]
       console.log("selected rided :",ride);
       this.getDriverData(ride)
-      
-      // const dialogConfig = new MatDialogConfig();
-      
-      // dialogConfig.disableClose = false;
-      // dialogConfig.autoFocus = true; 
-      // dialogConfig.width = '1000px'; 
-      // dialogConfig.data = ride; 
-      
-      // const dialogRef = this.dialog.open(AssignDriverComponent, dialogConfig);
-  
-      // dialogRef.afterClosed().subscribe((data: any) => {
-      //   // console.log(data);
-      //   this.driverdataArray = data
-        
-      //   // console.log("Assigned Driver Id:  ",this.driverdataArray.driverdata._id);  
-      //   this.driverId = this.driverdataArray.driverdata._id
-      //   this.rideId = this.driverdataArray.ridedata._id
-      //   this.cityId = this.driverdataArray.ridedata.cityId
-      //   this.serviceId = this.driverdataArray.ridedata.serviceId
-      //   // console.log("Driver ID:",this.driverId,"RIDE ID:",this.rideId);
-  
-      //   //==========emit data into socket.js when dialog box close=============
-      //   // console.log(this.driverdataArray.ridedata.nearest);
-        
-      //   if(this.driverdataArray.ridedata.nearest == false){
-      //     // console.log("if");
-      //     this._socket.emitassignedDriver(this.driverId  , this.rideId)
-      //   }else{
-      //     // console.log("else");
-      //     this._socket.emitnearestdriver(this.rideId, this.cityId, this.serviceId)
-  
-      //     //--------------SENDING PUSH NOTIFICATION DRIVER NOT FOUND-----------------//
-      //     this._socket.listeningmytaskfunc().subscribe((response: any)=> {
-      //       this.getrideData();
-      //     })
-      //   }
-      // });
     }
   
     // ---------------------------get driver data------------------------
@@ -295,22 +246,22 @@ export class ConfirmedRidesComponent implements OnInit {
     }
 
    // ------------------------updaton final confirm btn click(in modal)-----------------
-  assigndriverdata(){
-    this.SocketService.onFinalassignedDriverData('data').subscribe({
-      next: (response) => {
-        // console.log("New Assigned Driver Details:    ",response);
+  // assigndriverdata(){
+  //   this.SocketService.onFinalassignedDriverData('data').subscribe({
+  //     next: (response) => {
+  //       // console.log("New Assigned Driver Details:    ",response);
 
-        this.SocketService.getAssignedDriverData(this.cityId, this.serviceId)
-        // console.log(this.cityId, this.serviceId);
+  //       this.SocketService.getAssignedDriverData(this.cityId, this.serviceId)
+  //       // console.log(this.cityId, this.serviceId);
         
 
-        this.SocketService.onAssignedDriverData().subscribe((driverData) => {
-          // console.log("Remaining Driver to Assign: ",driverData);
-          this.driverArray = driverData;
-        });
-      }
-    })
-  }
+  //       this.SocketService.onAssignedDriverData().subscribe((driverData) => {
+  //         // console.log("Remaining Driver to Assign: ",driverData);
+  //         this.driverArray = driverData;
+  //       });
+  //     }
+  //   })
+  // }
 
     assignDriver(driver:any){
       this.driverId = driver._id
@@ -319,23 +270,10 @@ export class ConfirmedRidesComponent implements OnInit {
       // this.cityId = this.driverdataArray.ridedata.cityId
       // this.serviceId = this.driverdataArray.ridedata.serviceId
       console.log("assignDriver :",driver)
-      //==========emit data into socket.js when dialog box close=============
-      // console.log(this.driverdataArray.ridedata.nearest);
-      
-      // if(this.driverArray[0].nearest == false){
-        // console.log("if");
+     
         this.SocketService.emitassignedDriver(this.driverId  , this.rideId)
-        this.SocketService.onFinalassignedDriverData('new')
-      // }
-      // else{
-      //   // console.log("else");
-      //   this.SocketService.emitnearestdriver(this.rideId, this.cityId, this.serviceId)
+        // this.SocketService.onFinalassignedDriverData('new')
 
-      //   //--------------SENDING PUSH NOTIFICATION DRIVER NOT FOUND-----------------//
-      //   this.SocketService.listeningmytaskfunc().subscribe((response: any)=> {
-      //     this.fetchRideList();
-      //   })
-      // }
     }
 
     
@@ -366,22 +304,16 @@ export class ConfirmedRidesComponent implements OnInit {
   }
 
    //-----------------------cancel ride-----------------------
-   cancelRide(rideId: any){
+  cancelRide(rideId: any) {
     console.log(rideId);
-    this.SocketService.emitcancelride(rideId)
+    this.ConfirmedRidesService.delete(rideId).subscribe((ride) => { })
 
+  }
+  deletLisn() {
     this.SocketService.listencancelride().subscribe((ridedata: any) => {
       this.ToastrService.warning(ridedata.message)
-      // console.log("deleted data id :",ridedata.ridedata._id);
-
-      // const index = this.allRideList.findIndex(ride => ride._id === ridedata.ridedata._id);
-
-      // if (index !== -1) {
-      //   this.allRideList.splice(index, 1);
-      // }
       this.fetchRideList()
     })
-
   }
 
   NearestDriver() {
@@ -389,7 +321,7 @@ export class ConfirmedRidesComponent implements OnInit {
     this.SocketService.emitnearestdriver(this.rideId, this.cityId, this.serviceId)
     console.log("NearestDriver")
   }
-  //---------------------WHEN NEAREST ASSIGN CLICKED--------------------//
+  //---------------------nearest click--------------------//
   listennearestassignbuttonclick() {
     this.SocketService.listeningnearestdriver().subscribe((res: any) => {
       // this.fetchRideList()

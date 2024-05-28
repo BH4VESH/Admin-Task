@@ -13,7 +13,7 @@ exports.getRideList = async (req, res) => {
         {
           $match: {
             ridestatus:{
-              $nin:[3,7]
+              $in:[3,7]
             }
           }
         },
@@ -149,19 +149,25 @@ exports.searchRides = async (req, res) => {
           matchStage.$or = [
             { "user.username": { $regex: new RegExp(search, "i") } },
             { "user.phone": { $regex: new RegExp(search, "i") } },
+            { "fromLocation": { $regex: new RegExp(search, "i") } },
+            { "toLocation": { $regex: new RegExp(search, "i") } },
             { _id: searchObjectId },
           ];
+          
         }
     
         const matchCriteria = [];
+
         if (date) {
-          matchCriteria.push({ date: { $regex: new RegExp(date, "i") }})
-         }
+            matchCriteria.push({ date: { $regex: new RegExp(date, "i") }})
+        }
+        
         if (statusSearch !== -1) {
           matchCriteria.push({ ridestatus: { $in: [statusSearch] } });
         }else if (statusSearch === -1) {
-          matchCriteria.push({ ridestatus: { $nin: [3, 7] } });
+          matchCriteria.push({ ridestatus: { $in: [3, 7] } });
         }
+        
         
         if (vehicleSearch && vehicleSearch.length > 0) {
           matchCriteria.push({ vehicleId: new mongoose.Types.ObjectId(vehicleSearch) });
@@ -175,15 +181,21 @@ exports.searchRides = async (req, res) => {
 
     const aggregationPipeline = [
    
-
-      {
-        $lookup: {
-          from: "users",
-          localField: "userId",
-          foreignField: "_id",
-          as: "user",
+        {
+            $match: {
+                ridestatus: {
+                    $in: [3, 7]
+                }
+            }
         },
-      },
+        {
+            $lookup: {
+                from: "users",
+                localField: "userId",
+                foreignField: "_id",
+                as: "user",
+            },
+        },
       {
         $unwind: {
           path: "$user",
@@ -284,32 +296,7 @@ exports.searchRides = async (req, res) => {
   }
 };
 
-// --------------------- cancel ride btn(confirm ride)--------------------
-exports.delete = async (req, res) => {
-  console.log(req.body)
-  const rideId=req.body.rideId
-  try {
-    const ridedata = await SaveRideModel.findByIdAndUpdate(
-     { _id:rideId},
-      { ridestatus: 3 },
-      { new: true }
-    );
-    // console.log(ridedata);
-    global.io.emit("cancelridedata", {
-      success: true,
-      message: "Ride Cancelled Successfully",
-      ridedata,
-    });
-    res.json({success: true,message: "Ride Cancelled Successfully",ridedata})
-  } catch (error) {
-    console.error(error);
-    global.io.emit("cancelridedata", {
-      success: false,
-      message: "Ride Not Cancelled",
-      error: error.message,
-    });
-  }
-};
+
 
 
 
