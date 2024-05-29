@@ -89,7 +89,7 @@ app.use('/ridehistory',ridedHistoryRoutes);
 
 // for the socket connection
 initializeSocket(http)
-  initializeCronJob();
+  // initializeCronJob();
 
 http.listen(port, () => {
   console.log(`Server is running at http://localhost:${port}`);

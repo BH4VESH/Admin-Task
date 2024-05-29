@@ -18,20 +18,20 @@ exports.searchUsers = async (req, res) => {
                     ]
                 }
             },
-            {
-                $lookup: {
-                  from: "zones",
-                  localField: "countryId",
-                  foreignField: "country_id",
-                  as: "city",
-                },
-              },
-              {
-                $unwind: {
-                  path: "$city",
-                  preserveNullAndEmptyArrays: true
-                },
-              },
+            // {
+            //     $lookup: {
+            //       from: "zones",
+            //       localField: "countryId",
+            //       foreignField: "country_id",
+            //       as: "city",
+            //     },
+            //   },
+            //   {
+            //     $unwind: {
+            //       path: "$city",
+            //       preserveNullAndEmptyArrays: true
+            //     },
+            //   },
         ]);
             
               const customer = await stripe.customers.retrieve(users[0].stripeCustomerId);
@@ -127,67 +127,55 @@ exports.saveRide = async (req, res) => {
     
 };
 
-// --------------------check from point inside polygone or not
-// exports.checkPoint = async (req, res) => {
-//   const point = {
-//     type: 'Point',
-//     coordinates: [22.2904,70.7915]
-//   };
 
-//   try {
-//     // Retrieve polygons
-//     const polygons = await Zone.aggregate([
-//       {
-//         $match: {
-//           country_id: new mongoose.Types.ObjectId('660ce2e0167471f8dd0c0e4d')
-//         }
-//       },
-//       {
-//         $project: {
-//           coordinates: 1
-//         }
-//       }
-//     ]);
+exports.checkPoint = async (req, res) => {
+  console.log("Request Body:", req.body);
+  const countryId = req.body.countryId;
+  const checkPoint = req.body.checkPoint;
 
-//     let isInsideAnyPolygon = false;
+  // console.log("cccccccccccc",checkPoint.lat)
 
-//     // Iterate over each polygon
-//     for (const polygon of polygons) {
-//       const coordinates = polygon.coordinates.map(coord => [coord.lng, coord.lat]);
+  const point = {
+    type: 'Point',
+    coordinates: [70.839302, 22.339008]// Coordinates of the point
+  };
 
-//       // Close the ring by adding the first coordinate at the end
-//       coordinates.push(coordinates[0]);
+  try {
+    
+    const result = await Zone.aggregate([
+      {
+        $match: {
+          country_id: new mongoose.Types.ObjectId(countryId)
+        }
+      },
+      {
+        $match: {
+          coordinates: {
+            $geoIntersects: {
+              $geometry: {
+                  type: 'Point',
+                  coordinates: [checkPoint.lng,checkPoint.lat]
+              }
+          }
+          }
+        }
+      }
+    ]);
+    
+    if (result.length > 0) {
+      res.json({success:true,message:'Point is inside a polygon',inside:true})
+      console.log('Point is inside a polygon');
+    } else {
+      res.json({success:true,message:'Point is outside all polygons',inside:false})
+      console.log('Point is outside all polygons');
+    }
 
-//       // Construct GeoJSON Polygon
-//       const geoJSONPolygon = {
-//         type: 'Polygon',
-//         coordinates: [coordinates]
-//       };
-//       console.log('cheking...');
+  
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+  
 
-//       // Perform geospatial query to check if the point is inside the polygon
-//       if (isPointInsidePolygon(point, coordinates)) {
-//         isInsideAnyPolygon = true;
-//         res.json('Point is inside a polygon')
-//         console.log('Point is inside a polygon');
-//         break; // Exit loop if point is inside any polygon
-//       }
-//     }
 
-//     if (!isInsideAnyPolygon) {
-//       res.json('Point is outside all polygons')
-//       console.log('Point is outside all polygons');
-//     }
-
-//   } catch (error) {
-//     console.error('Error:', error);
-//   }
-// };
-
-// // Function to check if a point is inside a polygon
-// function isPointInsidePolygon(point, polygonCoordinates) {
-//   const polygon = turf.polygon([polygonCoordinates]);
-//   const pointFeature = turf.point(point.coordinates);
-//   return turf.booleanPointInPolygon(pointFeature, polygon);
-// }
-
+};

@@ -139,7 +139,7 @@ export class CreateRideComponent implements OnInit, AfterViewInit {
     this.Phone = this.users[0].phone;
   }
   nextBtn() {
-    this.convertPolygoneObject();
+    // this.convertPolygoneObject();
     this.initAutocomplete(this.placeMarker.bind(this));
     this.next = false;
     this.fromTo = true
@@ -210,7 +210,19 @@ export class CreateRideComponent implements OnInit, AfterViewInit {
       const place = fromAutocomplete.getPlace();
       var searchPoint = { lat: place.geometry.location.lat(), lng: place.geometry.location.lng() };
       this.ifInsideZone = false
-      this.isPointInsidePolygon(searchPoint, place, placeMarker, 'from');
+      // this.isPointInsidePolygon(searchPoint, place, placeMarker, 'from');
+
+      // checkpoint inside polygon
+      this.CreateRideService.checkPoint(this.users[0].countryId,searchPoint).subscribe((res)=>{
+        console.log(res)
+        // console.log("countryId :",this.users[0].countryId)
+        this.ifInsideZone = res.inside;
+        alert(res.message)
+        // this.toastrService.success(res.message)
+
+       
+      })
+
     });
 
     toAutocomplete.addListener('place_changed', () => {
@@ -231,51 +243,51 @@ export class CreateRideComponent implements OnInit, AfterViewInit {
   }
 
   //check from marker position
-  convertPolygoneObject() {
-    this.coordinates = []
-    this.users.forEach(user => {
-      const polygon = user.city.coordinates.map(coord => new google.maps.LatLng(coord.lat, coord.lng));
-      const googlePolygon = new google.maps.Polygon({ paths: polygon });
-      this.coordinates.push(googlePolygon)
-    }
-    );
-    console.log("coordinates", this.coordinates)
-  }
+  // convertPolygoneObject() {
+  //   this.coordinates = []
+  //   this.users.forEach(user => {
+  //     const polygon = user.city.coordinates.map(coord => new google.maps.LatLng(coord.lat, coord.lng));
+  //     const googlePolygon = new google.maps.Polygon({ paths: polygon });
+  //     this.coordinates.push(googlePolygon)
+  //   }
+  //   );
+  //   console.log("coordinates", this.coordinates)
+  // }
 
-  isPointInsidePolygon(searchPoint: { lat: number; lng: number; }, place: google.maps.places.PlaceResult, placeMarker: (place: google.maps.places.PlaceResult, type: 'from' | 'to' | 'stop') => void, type: 'from' | 'to' | 'stop') {
-    // let inside = false;
-    for (var i = 0; i < this.coordinates.length; i++) {
+  // isPointInsidePolygon(searchPoint: { lat: number; lng: number; }, place: google.maps.places.PlaceResult, placeMarker: (place: google.maps.places.PlaceResult, type: 'from' | 'to' | 'stop') => void, type: 'from' | 'to' | 'stop') {
+  //   // let inside = false;
+  //   for (var i = 0; i < this.coordinates.length; i++) {
 
-      if (google.maps.geometry.poly.containsLocation(searchPoint, this.coordinates[i])) {
-        this.ifInsideZone = true;
+  //     if (google.maps.geometry.poly.containsLocation(searchPoint, this.coordinates[i])) {
+  //       this.ifInsideZone = true;
 
-        // ------------fatch zoneCityId in the users array---------------------
-        this.zoneCityId = this.users[i].city._id
-        this.getVehiclePrice()//get price from the database
-        // console.log("city data in user[]",i)
-        console.log("city id is:", this.users[i].city._id)
-        break;
-      }
+  //       // ------------fatch zoneCityId in the users array---------------------
+  //       this.zoneCityId = this.users[i].city._id
+  //       this.getVehiclePrice()//get price from the database
+  //       // console.log("city data in user[]",i)
+  //       console.log("city id is:", this.users[i].city._id)
+  //       break;
+  //     }
       
-    }
-    if (this.ifInsideZone) {
-      this.toastrService.success('Point is inside polygon');
-      setTimeout(() => {
-        placeMarker(place, type);
-      }, 0);
-    } else {
-      alert('Point is not inside any polygon');
-      this.ifInsideZone = false
-      this.fromToInput.patchValue({
-        from: ""
-      })
-      if (this.fromMarker) {
-        this.fromMarker.setMap(null);
-        this.directionsRenderer?.setMap(null);
-        this.directionsRenderer = null;
-      }
-    }
-  }
+  //   }
+  //   if (this.ifInsideZone) {
+  //     this.toastrService.success('Point is inside polygon');
+  //     setTimeout(() => {
+  //       placeMarker(place, type);
+  //     }, 0);
+  //   } else {
+  //     alert('Point is not inside any polygon');
+  //     this.ifInsideZone = false
+  //     this.fromToInput.patchValue({
+  //       from: ""
+  //     })
+  //     if (this.fromMarker) {
+  //       this.fromMarker.setMap(null);
+  //       this.directionsRenderer?.setMap(null);
+  //       this.directionsRenderer = null;
+  //     }
+  //   }
+  // }
 
   // palce marker 
   placeMarker(place: google.maps.places.PlaceResult, type: 'from' | 'to' | 'stop'): void {
@@ -524,7 +536,7 @@ export class CreateRideComponent implements OnInit, AfterViewInit {
     console.log("estimateFare :", this.selectedestimeteFare)
     
 
-    // when need service id then iv call////////////////////////////////////////////
+    // when need service id then it call//////////////////
 
     //  // Trigger the onChangeService 
     //  const selectedOption = (document.getElementById('inputGroupid') as HTMLSelectElement).value;
@@ -720,19 +732,5 @@ export class CreateRideComponent implements OnInit, AfterViewInit {
     }
   }
 
-  // logAllValues(): void {
-  //   console.log('From:', (document.getElementById('from-input') as HTMLInputElement).value);
-  //   console.log("From coordinate :",this.fromMarker?.getPosition()?.toUrlValue())
-  //   console.log('To:', (document.getElementById('to-input') as HTMLInputElement).value);
-  //   console.log("To coordinate :",this.toMarker?.getPosition()?.toUrlValue())
-  //   this.stopsMarkers.forEach((marker, index) => {
-  //     console.log(`Stop ${index + 1} coordinates:`, marker.getPosition()?.toUrlValue());
-  //   });
-  //   this.stopInputs.forEach((_, index) => {
-  //     const stopInput: HTMLInputElement = document.getElementById(`stop-input-${index}`) as HTMLInputElement;
-  //     console.log(`Stop ${index + 1}:`, stopInput.value); // Log the value of the stop input
-  //   });
-  //   console.log(this.stopsMarkers)
-  // }
 
 }

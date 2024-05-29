@@ -25,4 +25,7 @@ export class CreateRideService {
   saveRide(data: any): Observable<any> {
     return this.http.post<any>(`${this.baseUrl}/saveRide`, data);
   }
+  checkPoint(countryId:any,checkPoint: any): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/checkPoint`, {countryId,checkPoint});
+  }
 }

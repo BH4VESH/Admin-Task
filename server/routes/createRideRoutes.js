@@ -6,7 +6,7 @@ const createRideController = require('../controllers/createRideController');
 router.post('/searchUser', createRideController.searchUsers);
 router.post('/getVehiclePrice', createRideController.getVehiclePrice);
 router.post('/saveRide', createRideController.saveRide);
-// router.post('/checkPoint', createRideController.checkPoint);
+router.post('/checkPoint', createRideController.checkPoint);
 // router.post1('/save')
 // router.post('/saveRide', createRideController.saveRide);
 // router.get('/get', settingController.getSetting);
