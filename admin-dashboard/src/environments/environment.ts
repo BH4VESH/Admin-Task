@@ -1,3 +1,3 @@
 export const environment = {
-    stripePublicKey:'pk_test_51P3Ws4SDDc6YrodmYHOIfUC2yTvqXI5D4ojMNxYQK8iEcdOWqGIZXAAbFwJoINzK5KL9U1Jp7FDSrw0QbfSWfuFy00x8ELio9Y'
+    stripePublicKey:'pk_test_51PLjvnRvOeoPHU1weSASxnNhkZFs1Lbe2DbSVoT1enRVzrJKRjH2OCCCL9F09sZcTB1bq43QL80zb3vdolC75pF500Zgvg7oCU'
 };

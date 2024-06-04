@@ -13,6 +13,14 @@ async function initializeSocket(server) {
   io.on("connection", (socket) => {
     console.log("Socket is Running.....................");
 
+    // notification counter
+    socket.on("counterSend",async ()=>{
+      io.emit("counterGet", {
+        success: true,
+        counter
+      });
+    })
+
     // initializeCronJob();
 
     

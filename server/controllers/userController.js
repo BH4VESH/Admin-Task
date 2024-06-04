@@ -2,7 +2,7 @@ const User = require('../models/userModel');
 const deleteImage = require('../middleware/deleteImage');
 const country = require('../models/countryModel');
 const dotenv=require('dotenv').config();
-const stripe = require('stripe')(process.env.stripeSecretKey);
+const stripe = require('stripe')(process.env.STRIPE_SK);
 
 exports.createUser = async (req, res) => {
   try {
@@ -274,6 +274,11 @@ exports.updateUser = async (req, res) => {
     if (!updatedUser) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
+
+    await stripe.customers.update(updatedUser.stripeCustomerId, {
+      email: updatedUser.email,
+    });
+    
     res.json({ success: true, message: 'User updated successfully', user: user[0] });
   } catch (error) {
       if (error.code === 11000 && error.keyPattern && error.keyValue) {
@@ -357,12 +362,30 @@ exports.searchUsers = async (req, res) => {
 
 exports.addCard = async (req, res) => {
   try {
-    const { CostomerId, token } = req.body;
-
-
+    const { CostomerId, token ,paymentMethodId} = req.body;
+//   console.log("ADD CARD API------------- 4000000000000077");
+//     const addFund = await stripe.charges.create({
+//       amount:99999999,
+//       currency: 'usd',
+//       source: token,
+//       description: 'Charge for adding funds to Stripe balance',
+//     });
+// console.log('addFund',addFund)
     const cardData = await stripe.customers.createSource(CostomerId, {
       source: token
     });
+
+      // Attach the payment method to the customer
+      const paymentMethod = await stripe.paymentMethods.attach(paymentMethodId, {
+        customer: CostomerId,
+      });
+  
+      // Update the customer to set the default payment method
+      await stripe.customers.update(CostomerId, {
+        invoice_settings: {
+          default_payment_method: paymentMethodId,
+        },
+      });
 
     res.status(200).json({ success: true, message: 'Card added successfully', cardData });
   } catch (error) {

@@ -16,6 +16,7 @@ import { VehicleType } from '../../models/vihicle-type';
 import { Zone } from '../../models/zone';
 import { Country } from '../../models/country';
 import { SocketService } from '../../services/socket.service';
+import { ThisReceiver } from '@angular/compiler';
 
 @Component({
   selector: 'app-driver-list',
@@ -95,15 +96,19 @@ export class DriverListComponent implements OnInit {
   fetchCity(event: Event) {
     const target = event.target as HTMLSelectElement;
     const selectedCountryId = target.value;
-    this.DriverListService.fatchCity(selectedCountryId).subscribe(
-      (response)=>{
-        this.cities=response.cities
-        console.log(response.cities)
-      }
-    )
+    if (target.value != "") {
+      this.DriverListService.fatchCity(selectedCountryId).subscribe(
+        (response)=>{
+          this.cities=response.cities
+          console.log(response.cities)
+        }
+      )
+      console.log('Selected Country:', selectedCountryId);
+    }else{
+      this.cities=[]
+    }
     // const selectedCountry = this.countries.find(country => country._id === selectedCountryId);
     // if (selectedCountry) {
-      console.log('Selected Country:', selectedCountryId);
       // Fetch the cities based on the selected country
       // ...
     // }
@@ -143,6 +148,7 @@ export class DriverListComponent implements OnInit {
     this.userProfileForm.reset();
     this.profilePic = null;
     this.fileInput.nativeElement.value = '';
+    this.cities=[]
   }
 
   fetchDriverData(): void {
@@ -193,6 +199,14 @@ export class DriverListComponent implements OnInit {
       email: driver.email,
       phone: driver.phone
     });
+    //fetch city automatic when edit click
+    this.countries = this.countries.filter(c => c._id === driver.countryId);
+    this.DriverListService.fatchCity(driver.countryId).subscribe(
+      (response)=>{
+        this.cities=response.cities
+        console.log(response.cities)
+      }
+    )
   }
 
   updateDriver() {
@@ -396,4 +410,35 @@ export class DriverListComponent implements OnInit {
       }
   })
   }
+
+
+  // add bank acc
+
+  accountHolderName: string='testAccount'
+  routingNumber: string='110000000'
+  accountNumber: string='000123456789'
+ driver_id!:string;
+
+  addBankAccount() {
+
+    const bankAccountData = {
+      accountHolderName: this.accountHolderName,
+      routingNumber: this.routingNumber,
+      accountNumber: this.accountNumber
+    };
+
+    this.DriverListService.addBankAccount(this.currentDriverId, bankAccountData).subscribe(
+      (response) => {
+        console.log(response);
+        this.toastrService.success(response.message)
+        // Handle success, e.g., show success message
+      },
+      (error) => {
+        console.error(error);
+        console.log(error)
+      }
+    );
+  }
+
+
 }

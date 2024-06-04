@@ -1,7 +1,7 @@
 <!-- Button trigger modal -->
 <div class="container-fluid d-grid mb-2 pt-5">
     <button type="button" class="btn btn-secondary mt-2" data-bs-toggle="modal" data-bs-target="#exampleModal"
-        (click)="btn_name_chenge(); resetForm()">
+        (click)="btn_name_chenge();fetchCountries(); resetForm()">
         Add Driver
     </button>
 </div>
@@ -178,6 +178,7 @@
 
                             <th>Service</th>
                             <th>Approve/Decline</th>
+                            <th>Add account</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -195,12 +196,17 @@
                                     data-bs-target="#serviceModal"
                                     (click)="getCurrentId(driver);preSelectedchek(driver)">
                                     Service</button></td>
-
-                            <td> <button type="button" class="btn" [ngClass]="{
+                                    
+                                    <td> <button type="button" class="btn" [ngClass]="{
                                 'btn-outline-danger': driver.status === true,
                                 'btn-outline-success': driver.status === false
                               }" (click)="getCurrentId(driver);approveDecline(driver)"> {{ driver.status ? 'Decline' :
-                                    'Approve' }}</button></td>
+                              'Approve' }}</button></td>
+
+                              <td> <button type="button" class="btn btn btn-outline-info me-2" data-bs-toggle="modal"
+                                      data-bs-target="#accountModel"
+                                      (click)="getCurrentId(driver)">
+                                      Add account</button></td>
 
                             <td>
 
@@ -273,3 +279,37 @@
         </div>
     </div>
 </div>
+
+
+<!-- add account -->
+<div class="modal fade" id="accountModel" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header d-flex justify-content-center bg-info">
+          <h2 class="text-white">Add Account</h2>
+        </div>
+        <div class="modal-body">
+          <div>
+            <h2>Add Bank Account</h2>
+            <div class="form-group">
+              <label for="accountHolderName">Account Holder Name:</label>
+              <input type="text" class="form-control" id="accountHolderName" [(ngModel)]="accountHolderName" placeholder="testAccount">
+            </div>
+            <div class="form-group">
+              <label for="routingNumber">Routing Number:</label>
+              <input type="text" class="form-control" id="routingNumber" [(ngModel)]="routingNumber" placeholder="110000000">
+            </div>
+            <div class="form-group">
+              <label for="accountNumber">Account Number:</label>
+              <input type="text" class="form-control" id="accountNumber" [(ngModel)]="accountNumber" placeholder="000123456789">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" data-bs-dismiss="modal" class="btn btn-primary" (click)="addBankAccount()">Add Bank Account</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  

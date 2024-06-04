@@ -36,6 +36,8 @@ export class HeaderComponent implements OnInit{
     this.listingCronUpdate2C()
     this.ridestatusupates()
     this.listingCronUpdate()
+    this.pagerefreshEmit()
+    this.pagerefrshLisn()
   
   }
 
@@ -60,6 +62,16 @@ export class HeaderComponent implements OnInit{
     this.SocketService.listenForUpdateData().subscribe((res:any) => {
       this.notif_counter=res.cronRide.counter
      
+    });
+  }
+
+  // page refresh counter
+  pagerefreshEmit(){
+    this.SocketService.emitCounter()
+  }
+  pagerefrshLisn(){
+    this.SocketService.listenCounter().subscribe((res:any) => {
+      this.notif_counter=res.counter 
     });
   }
 

@@ -1,6 +1,10 @@
 const createrideModel = require('../models/createRide');
 const driverModel = require('../models/driverListModel');
+const userModel = require('../models/userModel');
 const {mongoose } = require('mongoose');
+const { chargeCustomer } = require('../service/payment');
+const { sms } = require('../service/sms');
+const { mail } = require('../service/mail');
 
 
 // ------------------------reject ride
@@ -98,6 +102,7 @@ exports.acceptRide = async (req, res) => {
 
         // ride.counter = counter2;
 
+        await sms('ride accepted')
         global.io.emit('rideupdates', { ride, counter2 });
         res.json({ success: true, ride });
 
@@ -136,6 +141,7 @@ exports.startRide = async (req, res) => {
         const ride = await createrideModel.findByIdAndUpdate(rideId, { ridestatus: 6 }, { new: true })
        
         var counter2 = global.counter
+        await sms('ride stared')
         global.io.emit('rideupdates', { ride, counter2 });
         res.json({ success: true, ride });
     } catch (error) {
@@ -147,12 +153,24 @@ exports.completeRide = async (req, res) => {
     const driverId = req.body.driverId
     
     try {
-        const driver = await driverModel.findById(driverId)
+          const driver = await driverModel.findById(driverId)
+          const driverAcc=driver.stripeDriverId
+          // const ride = await createrideModel.findByIdAndUpdate(rideId, { $set: { ridestatus: 0 }},{ new: true } );
           const ride = await createrideModel.findByIdAndUpdate(rideId, { $set: { ridestatus: 7 }},{ new: true } );
-        //   const userdata = await userModel.findById(ridedata.userId)
+          const user = await userModel.findById(ride.userId)
+
+          // for the payment
+            const { success, message ,clientSecret,auth_redirectUrl,paymentIntentStatus} = await chargeCustomer(user.stripeCustomerId, ride.estimeteFare,driverAcc,ride);
+            
+            console.log("AAAAAA",success)
+            console.log("BBBBBB",message)
+            console.log("CCCCCC",driver)
+            console.log("DDDDDD",auth_redirectUrl)
+
         var counter2 = global.counter
-          global.io.emit("rideupdates" ,{ride,driver,counter2});
-          res.json({ success: true ,ride,driver});
+        await sms('ride completed')
+          global.io.emit("rideupdates" ,{success,ride,driver,counter2,message,auth_redirectUrl});
+          res.json({ success: true ,ride,driver,message,counter2,auth_redirectUrl});
 
         } catch (error) {
           console.log(error);

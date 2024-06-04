@@ -289,6 +289,7 @@ export class UserComponent implements OnInit, AfterViewInit {
   cardData!: CardData
   cards: any[] = [];
   defaultCardId: string | null = null;
+  paymentMethodId!: string;
 
   createStripeElement() {
     this.stripe = Stripe(environment.stripePublicKey);
@@ -310,8 +311,13 @@ export class UserComponent implements OnInit, AfterViewInit {
         // console.error(result.error.message);
       } else {
         if (result.token && result.token.card) {
+          // const { paymentMethod, error } = await this.stripe.createPaymentMethod({
+          //   type: 'card',
+          //   card: this.card,
+          // });
           this.token = result.token
           this.token_id = result.token.id
+          // this.paymentMethodId = paymentMethod.id;
           this.addCard()
           // console.log("it is token:", this.token)
         } else {
@@ -328,7 +334,7 @@ export class UserComponent implements OnInit, AfterViewInit {
 
   addCard() {
 
-    this.CardService.addCard(this.CostomerId, this.token_id)
+    this.CardService.addCard(this.CostomerId, this.token_id,this.paymentMethodId)
       .subscribe((response: AddCardResponse) => {
         // console.log(this.CostomerId)
         if (response.success) {

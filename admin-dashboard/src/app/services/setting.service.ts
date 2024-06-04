@@ -10,8 +10,9 @@ export class SettingService {
   private baseUrl = 'http://localhost:3000/setting';
 
   constructor(private http: HttpClient) {}
-  saveSetting(selectedSeconds: number, selectedStopCount: number): Observable<Setting> {
-    const body = {selectedSeconds, selectedStopCount };
+  saveSetting(selectedSeconds: number, selectedStopCount: number,settings: any): Observable<Setting> {
+    console.log("ser............",settings)
+    const body = {selectedSeconds, selectedStopCount, settings };
     return this.http.post<Setting>(`${this.baseUrl}/save`, body);
   }
   getSetting(): Observable<Setting[]> { 

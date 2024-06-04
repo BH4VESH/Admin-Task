@@ -10,6 +10,7 @@ const userSchema = new mongoose.Schema({
   phone: { type: String, unique: true },
   status:{type:Boolean,default: false},
   assign: {type: String,default: "0"},
+  stripeDriverId:{ type: String}
 });
 
 const Driver = mongoose.model('Driver_list', userSchema);

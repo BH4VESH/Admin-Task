@@ -79,7 +79,8 @@ export class ConfirmedRidesComponent implements OnInit {
         }
       },
       error => {
-        this.ToastrService.error('Error fetching ride data');
+        this.ToastrService.warning('Not data awailable');
+        console.log('Error fetching ride data',error)
       }
     );
   }
@@ -306,7 +307,9 @@ export class ConfirmedRidesComponent implements OnInit {
    //-----------------------cancel ride-----------------------
   cancelRide(rideId: any) {
     console.log(rideId);
-    this.ConfirmedRidesService.delete(rideId).subscribe((ride) => { })
+    this.ConfirmedRidesService.delete(rideId).subscribe((ride) => {
+      console.log(ride)
+     })
 
   }
   deletLisn() {
@@ -427,7 +430,8 @@ export class ConfirmedRidesComponent implements OnInit {
    // -----------------accept btn listning
    ridestatusupates() {
     this.SocketService.listeningrideupdates().subscribe((res: any) => {
-      console.log("sssssssssssssssssssssssssss",res.ride.ridestatus)
+      // console.log("RRRRRRRRRRRRRRRRRRR",res)
+      // console.log("sssssssssssssssssssssssssss",res.ride.ridestatus)
       const index = this.allRideList.findIndex(ride => ride._id === res.ride._id);
 
       if (index !== -1) {

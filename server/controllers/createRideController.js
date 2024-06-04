@@ -3,7 +3,7 @@ const Zone =require('../models/cityModel')
 const {mongoose } = require('mongoose');
 const SaveRideModel = require('../models/createRide');
 const dotenv=require('dotenv').config();
-const stripe = require('stripe')(process.env.stripeSecretKey);
+const stripe = require('stripe')(process.env.STRIPE_SK);
 const turf = require('@turf/turf');
 
 exports.searchUsers = async (req, res) => {
@@ -18,20 +18,20 @@ exports.searchUsers = async (req, res) => {
                     ]
                 }
             },
-            // {
-            //     $lookup: {
-            //       from: "zones",
-            //       localField: "countryId",
-            //       foreignField: "country_id",
-            //       as: "city",
-            //     },
-            //   },
-            //   {
-            //     $unwind: {
-            //       path: "$city",
-            //       preserveNullAndEmptyArrays: true
-            //     },
-            //   },
+            {
+                $lookup: {
+                  from: "zones",
+                  localField: "countryId",
+                  foreignField: "country_id",
+                  as: "city",
+                },
+              },
+              {
+                $unwind: {
+                  path: "$city",
+                  preserveNullAndEmptyArrays: true
+                },
+              },
         ]);
             
               const customer = await stripe.customers.retrieve(users[0].stripeCustomerId);

@@ -80,16 +80,16 @@ app.use('/users',checkAuth, userRoutes);
 app.use('/driverlist',checkAuth,driver_listRoutes);
 app.use('/setting',checkAuth,settingRoutes);
 // task-4 start
-app.use('/createride',createRideRoutes);
-app.use('/confirmedride',confirmedRideRoutes);
-app.use('/runningride',runningRequestRoutes);
-app.use('/ridehistory',ridedHistoryRoutes);
+app.use('/createride',checkAuth,createRideRoutes);
+app.use('/confirmedride',checkAuth,confirmedRideRoutes);
+app.use('/runningride',checkAuth,runningRequestRoutes);
+app.use('/ridehistory',checkAuth,ridedHistoryRoutes);
 
 
 
 // for the socket connection
 initializeSocket(http)
-  // initializeCronJob();
+  initializeCronJob();
 
 http.listen(port, () => {
   console.log(`Server is running at http://localhost:${port}`);

@@ -212,4 +212,15 @@ listeningrideupdates(): Observable<any>  {
   })
 }
 
+emitCounter() {
+  this.socket.emit('counterSend')
+}
+listenCounter(): Observable<any>  {
+  return new Observable(observer => {
+    this.socket.on("counterGet", (data: any) => {
+      observer.next(data)
+    })
+  })
+}
+
 }

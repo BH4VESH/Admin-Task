@@ -46,7 +46,7 @@ export class CreateRideComponent implements OnInit, AfterViewInit {
   distance!: Number
   duration!: any
   coordinates: any[] = []
-  ifInsideZone: boolean = false;
+  ifInsideZone!: boolean ;
   zoneCityId: string | undefined  //fatch in isPointInsidePolygon()
   allPriceData: getVehiclePrice[] = []
   ifCardAdded: boolean = false
@@ -209,16 +209,29 @@ export class CreateRideComponent implements OnInit, AfterViewInit {
     fromAutocomplete.addListener('place_changed', () => {
       const place = fromAutocomplete.getPlace();
       var searchPoint = { lat: place.geometry.location.lat(), lng: place.geometry.location.lng() };
-      this.ifInsideZone = false
-      // this.isPointInsidePolygon(searchPoint, place, placeMarker, 'from');
-
+      // this.ifInsideZone = true
+      
       // checkpoint inside polygon
       this.CreateRideService.checkPoint(this.users[0].countryId,searchPoint).subscribe((res)=>{
         console.log(res)
+        alert(res.message)
         // console.log("countryId :",this.users[0].countryId)
         this.ifInsideZone = res.inside;
-        alert(res.message)
-        // this.toastrService.success(res.message)
+        // this.isPointInsidePolygon(place, placeMarker, 'from');
+        if ( res.inside) {
+            placeMarker(place, 'from');
+            this.zoneCityId = this.users[0].city._id
+            this.getVehiclePrice()
+        } else {
+          this.fromToInput.patchValue({
+            from: ""
+          })
+          if (this.fromMarker) {
+            this.fromMarker.setMap(null);
+            this.directionsRenderer?.setMap(null);
+            this.directionsRenderer = null;
+          }
+        }
 
        
       })
@@ -254,22 +267,22 @@ export class CreateRideComponent implements OnInit, AfterViewInit {
   //   console.log("coordinates", this.coordinates)
   // }
 
-  // isPointInsidePolygon(searchPoint: { lat: number; lng: number; }, place: google.maps.places.PlaceResult, placeMarker: (place: google.maps.places.PlaceResult, type: 'from' | 'to' | 'stop') => void, type: 'from' | 'to' | 'stop') {
+  // isPointInsidePolygon(place: google.maps.places.PlaceResult, placeMarker: (place: google.maps.places.PlaceResult, type: 'from' | 'to' | 'stop') => void, type: 'from' | 'to' | 'stop') {
   //   // let inside = false;
-  //   for (var i = 0; i < this.coordinates.length; i++) {
+  //   // for (var i = 0; i < this.coordinates.length; i++) {
 
-  //     if (google.maps.geometry.poly.containsLocation(searchPoint, this.coordinates[i])) {
-  //       this.ifInsideZone = true;
+  //     if (this.ifInsideZone) {
+  //       // this.ifInsideZone = true;
 
   //       // ------------fatch zoneCityId in the users array---------------------
-  //       this.zoneCityId = this.users[i].city._id
+  //       this.zoneCityId = this.users[0].city._id
   //       this.getVehiclePrice()//get price from the database
   //       // console.log("city data in user[]",i)
-  //       console.log("city id is:", this.users[i].city._id)
-  //       break;
+  //       console.log("city id is:", this.users[0].city._id)
+  //       // break;
   //     }
       
-  //   }
+  //   // }
   //   if (this.ifInsideZone) {
   //     this.toastrService.success('Point is inside polygon');
   //     setTimeout(() => {
@@ -343,7 +356,7 @@ export class CreateRideComponent implements OnInit, AfterViewInit {
   calculate() {
     var fromValue = (document.getElementById('from-input') as HTMLInputElement).value
     var toValue = (document.getElementById('to-input') as HTMLInputElement).value
-
+console.log(this.ifInsideZone)
     if (this.ifInsideZone) {
       if (!fromValue && !toValue) {
         this.toastrService.error('Please select "from" and "to" location.');
@@ -364,7 +377,7 @@ export class CreateRideComponent implements OnInit, AfterViewInit {
           this.directionsRenderer = null;
         }
         this.toastrService.error('Please select "To" location.');
-      } else if (fromValue === toValue) {
+      } else if (fromValue === toValue || this.fromMarker==this.toMarker) {
         console.log(fromValue, toValue)
         this.toastrService.error('Invalid: Same input location for "From" and "To".');
         // this.fromMarker=null

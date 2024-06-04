@@ -6,6 +6,9 @@ import { DurationConvertPipe } from "../../pipes/duration-convert.pipe";
 import { SettingService } from '../../services/setting.service';
 import { RunningRequestService } from '../../services/running-request.service';
 import { NotificationService } from '../../services/notification.service';
+import { environment } from '../../../environments/environment.development';
+declare var Stripe: any;
+
 
 @Component({
     selector: 'app-running-request',
@@ -24,6 +27,7 @@ export class RunningRequestComponent implements OnInit {
   countdownTimers: { [key: string]: any } = {};
   settingTime!:number
   // private subscriptions: Subscription[] = [];
+  
 
   constructor(
     private ToastrService:ToastrService,
@@ -332,15 +336,46 @@ export class RunningRequestComponent implements OnInit {
       })
     }
 
-    completeRide(data: any){
-      // console.log(data);
+    // stripe: any;
+
+    test() {
+      const stripe = Stripe(environment.stripePublicKey);
+      const elements = stripe.elements();
+
+      const cardData = {
+        number: '4000000000000077',
+        exp_month: 12,
+        exp_year: 2024,
+        cvc: '123'
+      };
+      const card = elements.create('card',cardData);
+      
+      stripe.createToken(card).then((result:any) => {
+        const token = result.token;
+        console.log(token.id);
+      });
+    }
+
+
+   async completeRide(data: any){
+   
       const dataE = {
+        // token:token.id,
         rideId: data._id,
         driverId: data.driverId
       }
       
       this.RunningRequestService.completeRide(dataE).subscribe((res)=>{
         console.log(res,"eeeeeeeeeeeeeeeeee")
+        console.log(res.auth_redirectUrl)
+        this.ToastrService.info(res.message)
+         console.log("it is url responce :",res)
+
+      if (res.auth_redirectUrl) {
+        window.location.href = res.auth_redirectUrl;
+      } else {
+        this.ToastrService.info(res.message);
+      }
       })
       this.acceptNotification()
     }
@@ -365,7 +400,7 @@ export class RunningRequestComponent implements OnInit {
         console.log("counterrrrrrrrrr",res.counter2)
         console.log("compaleeeeeeeeeeeeride",res.ride.ridestatus)
         const index = this.assignedArray.findIndex(ride => ride._id === res.ride._id);
-
+        
         if (index !== -1) {
           if(res.ride.driverId==null){
             this.assignedArray[index].ridestatus=res.ride.ridestatus
