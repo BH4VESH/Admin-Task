@@ -344,6 +344,7 @@ export class UserComponent implements OnInit, AfterViewInit {
           this.toastrService.success("Card added successfully")
           console.log('Card added successfully:', response.cardData
           );
+          this.clearCardInput()
           console.log('Carddata:', this.cards);
         } else {
           this.toastrService.error(response.error)
@@ -438,6 +439,17 @@ export class UserComponent implements OnInit, AfterViewInit {
           }
         );
     }
+  }
+
+  clearCardInput() {
+    this.card.unmount();
+    this.card.mount(this.cardElement.nativeElement);
+    this.token = '';
+    this.token_id = '';
+    // this.cardNumber = '';
+    // this.expiry = '';
+    // this.cvc = '';
+    // this.paymentMethodId = '';
   }
 
 }

@@ -160,21 +160,6 @@ listenForUpdateData2C() {
 // ..........................running part.....................................
 
 
-//----------------------running req---------------
-listenGetRunning(): Observable<any> {
-  return new Observable(observer => {
-    this.socket.on('runningdata', (data: any) => {
-      // console.log(data)
-      
-      observer.next(data)
-    })
-  })
-}
-
-emitRunningData() {
-  this.socket.emit('runningrequest')
-}
-
 
 listenrejectRunningRequest(): Observable<any>  {
 

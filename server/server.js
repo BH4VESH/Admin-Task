@@ -50,7 +50,7 @@ app.post('/login', async (req, res) => {
   }
   if (user) {
     // const token = jwt.sign({ userId: user._id }, JWT_SECRET);
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '20000000m' });
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '2000m' });
     res.json({ token });
   } 
 });
@@ -89,7 +89,7 @@ app.use('/ridehistory',checkAuth,ridedHistoryRoutes);
 
 // for the socket connection
 initializeSocket(http)
-  initializeCronJob();
+  // initializeCronJob();
 
 http.listen(port, () => {
   console.log(`Server is running at http://localhost:${port}`);

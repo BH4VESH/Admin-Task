@@ -92,14 +92,12 @@ export class RunningRequestComponent implements OnInit {
 
   getRunningData() {
     this.getSettingTime()
-    this.SocketService.emitRunningData()
-
-    this.SocketService.listenGetRunning().subscribe((data: any) => {
+    
+    this.RunningRequestService.getRunningData().subscribe((data)=>{
       console.log("fetch all data :",data);
       this.assignedArray = data.alldata;
       console.log("assign arr :",this.assignedArray);
-
-    });
+    })
   }
 
     // info

@@ -194,7 +194,7 @@ exports.getShortUser = async (req, res) => {
 };
 // /////////////////////////////////delete
 exports.deleteUser = async (req, res) => {
-  const id = req.params.id;
+  const id = req.params.id; 
 
   try {
     const deletedUser = await User.findByIdAndDelete(id);
@@ -363,7 +363,7 @@ exports.searchUsers = async (req, res) => {
 exports.addCard = async (req, res) => {
   try {
     const { CostomerId, token ,paymentMethodId} = req.body;
-//   console.log("ADD CARD API------------- 4000000000000077");
+  // console.log("ADD CARD API------------- 4000000000000077",token);
 //     const addFund = await stripe.charges.create({
 //       amount:99999999,
 //       currency: 'usd',
@@ -376,16 +376,16 @@ exports.addCard = async (req, res) => {
     });
 
       // Attach the payment method to the customer
-      const paymentMethod = await stripe.paymentMethods.attach(paymentMethodId, {
-        customer: CostomerId,
-      });
+      // const paymentMethod = await stripe.paymentMethods.attach(paymentMethodId, {
+      //   customer: CostomerId,
+      // });
   
-      // Update the customer to set the default payment method
-      await stripe.customers.update(CostomerId, {
-        invoice_settings: {
-          default_payment_method: paymentMethodId,
-        },
-      });
+      // // Update the customer to set the default payment method
+      // await stripe.customers.update(CostomerId, {
+      //   invoice_settings: {
+      //     default_payment_method: paymentMethodId,
+      //   },
+      // });
 
     res.status(200).json({ success: true, message: 'Card added successfully', cardData });
   } catch (error) {

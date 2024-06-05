@@ -138,7 +138,7 @@ export class CityComponent implements OnInit {
 
     this.searchAutocomplete?.addListener('place_changed', () => {
       const city = this.searchAutocomplete!.getPlace();
-      if (!city || !city.geometry || !city.geometry.location) {
+      if (!city.geometry || !city.geometry.location) {
         this.toastr.error('Please select a valid city.');
         return;
       }

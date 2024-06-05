@@ -5,6 +5,10 @@ exports.createZone = async (req, res) => {
   try {
     const { country_id, name, coordinates } = req.body;
     // console.log("bodyyyyyyyyyyyyyyyyyyyyyyy", req.body.coordinates.coordinates);
+    const existingZone = await Zone.findOne({ name });
+    if (existingZone) {
+      return res.status(400).json({ error: 'Zone with this name already exists' });
+    }
 
     const zone = new Zone({
       country_id,

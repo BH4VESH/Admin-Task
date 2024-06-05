@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { fatchRide } from '../models/runningRequest';
 
 @Injectable({
   providedIn: 'root'
@@ -10,6 +11,10 @@ export class RunningRequestService {
 
   constructor(private http: HttpClient) { }
 
+  // --------------------get ride
+  getRunningData(): Observable<fatchRide> {
+    return this.http.get<fatchRide>(`${this.baseUrl}/getRunningData`);
+  }
   // --------------------reject ride
   rejectRide(data: any): Observable<any> {
     return this.http.post<any>(`${this.baseUrl}/rejectRide`, data);
