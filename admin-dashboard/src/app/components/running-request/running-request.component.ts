@@ -92,7 +92,7 @@ export class RunningRequestComponent implements OnInit {
 
   getRunningData() {
     this.getSettingTime()
-    
+
     this.RunningRequestService.getRunningData().subscribe((data)=>{
       console.log("fetch all data :",data);
       this.assignedArray = data.alldata;
@@ -262,7 +262,8 @@ export class RunningRequestComponent implements OnInit {
     }
 
     this.RunningRequestService.rejectRide(data).subscribe((res)=>{
-      console.log("rejected")
+      console.log("rejected",res)
+      this.startCountdown( res.result._id , res.result.assigningTime);
     })
   }
 

@@ -4,16 +4,17 @@ import { RideHistoryService } from '../../services/ride-history.service';
 import { ToastrService } from 'ngx-toastr';
 import { VehicleService } from '../../services/vehicle.service';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DurationConvertPipe } from '../../pipes/duration-convert.pipe';
 import { SocketService } from '../../services/socket.service';
+import { rideDetails} from '../../models/rideHistory';
 
 declare const google: any;
 
 @Component({
   selector: 'app-ride-history',
   standalone: true,
-  imports: [CommonModule,MatPaginatorModule, FormsModule, DurationConvertPipe],
+  imports: [CommonModule,MatPaginatorModule, FormsModule, DurationConvertPipe,ReactiveFormsModule],
   templateUrl: './ride-history.component.html',
   styleUrl: './ride-history.component.css'
 })
@@ -21,6 +22,7 @@ export class RideHistoryComponent implements OnInit {
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild('mapContainer', { static: true }) mapContainer!: ElementRef<HTMLElement>;
+  feedbackForm: FormGroup;
 
   search: string = '';
   statusSearch: number=-1 
@@ -34,6 +36,8 @@ export class RideHistoryComponent implements OnInit {
 
   allRideList:any[]=[]
   vehicleList:any[]=[]
+
+  rideId!:string;
   // messageInput: any;
   map!: google.maps.Map;
   public geocoder!: google.maps.Geocoder;
@@ -44,9 +48,13 @@ export class RideHistoryComponent implements OnInit {
     private ToastrService:ToastrService,
     private VehicleService:VehicleService,
     private SocketService:SocketService,
+    private fb: FormBuilder
     
   ){
-    
+    this.feedbackForm = this.fb.group({
+      rating: ['', Validators.required],
+      feedback: ['', Validators.required]
+    });
   }
   
   ngOnInit(): void {
@@ -252,7 +260,7 @@ export class RideHistoryComponent implements OnInit {
   }
 
 // downloads-csv
-  download(ride: any): void {
+  download(ride: rideDetails): void {
     console.log(ride)
     const headers = ['Ride ID','Status', 'Service Name', 'Username', 'Phone', 'Email','FromLocation','ToLocation','Distance(Km)','ScheduledDate','Date','EstimeteFare','Paymentoption','Country Code','City'];
     const fields = ['_id','ridestatus','service.name', 'user.username', 'user.phone', 'user.email','fromLocation','toLocation','totalDistanceKm','scheduledDate','date','estimeteFare','paymentOption','country.country_code','city.name'];
@@ -292,6 +300,44 @@ export class RideHistoryComponent implements OnInit {
 
     return csv;
 }
+
+
+// give feedback
+submitBtn:boolean=true
+  feedback(ride: rideDetails) {
+    this.rideId = ride._id
+    if (ride.feedback?.feedback) {
+      this.feedbackForm.patchValue({
+        rating: ride.feedback?.rating || '',
+        feedback: ride.feedback?.feedback || ''
+      });
+      this.submitBtn = false
+    } else {
+      this.submitBtn = true
+      this.feedbackForm.reset()
+    }
+    // console.log(ride.feedback?.rating)
+    // console.log(this.feedbackForm)
+  }
+  onSubmit(): void {
+    if (this.feedbackForm.valid) {
+      this.RideHistoryService.submitFeedback(this.rideId, this.feedbackForm.value).subscribe(
+        response => {
+          this.ToastrService.success(response.message)
+          const index = this.allRideList.findIndex(ride => ride._id === response.feedbackData._id);
+
+          if (index !== -1) {
+            this.allRideList[index].feedback = response.feedbackData.feedback;
+          }
+          this.feedbackForm.reset()
+          console.log('Feedback submitted', response.feedbackData);
+        },
+        error => {
+          console.error('Error submitting feedback', error);
+        }
+      );
+    }
+  }
 
 }
 

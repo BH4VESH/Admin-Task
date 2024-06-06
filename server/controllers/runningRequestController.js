@@ -125,7 +125,7 @@ exports.rejectRide = async (req, res) => {
 
   try {
     const fetchridedata = await createrideModel.findById(rideId);
-    // console.log(fetchridedata);
+    console.log("fetchridedata : ",fetchridedata);
 
     const nearestfalsedriver = await driverModel.findByIdAndUpdate(
       { _id: driverId },
@@ -148,8 +148,8 @@ exports.rejectRide = async (req, res) => {
         {
           $match: {
             status: true,
-            city: fetchridedata.cityId,
-            servicetype: fetchridedata.serviceId,
+            cityId: fetchridedata.cityId,
+            serviceID: fetchridedata.vehicleId,
             assign: "0",
             _id: { $nin: fetchridedata.nearestArray }
           },
@@ -183,8 +183,8 @@ exports.rejectRide = async (req, res) => {
           {
             $match: {
               status: true,
-              city: fetchridedata.cityId,
-              servicetype: fetchridedata.serviceId,
+              cityId: fetchridedata.cityId,
+              serviceID: fetchridedata.vehicleId,
               assign: "1",
               _id: { $nin: fetchridedata.nearestArray }
             },

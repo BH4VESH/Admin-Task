@@ -45,7 +45,7 @@ export class SettingsComponent implements OnInit {
       .subscribe(
         (response:Setting) => {
           this.ToastrService.success('Setting saved successfully')
-          this.settingForm.reset()
+          // this.settingForm.reset()
           // console.log('Setting saved successfully', response);
         },
         (error) => {

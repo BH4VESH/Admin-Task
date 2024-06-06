@@ -439,7 +439,12 @@ export class ConfirmedRidesComponent implements OnInit {
           this.allRideList[index].ridestatus=res.ride.ridestatus
           this.allRideList[index].driverId=null
         }else{
-          this.allRideList[index].ridestatus=res.ride.ridestatus
+          if (res.ride.ridestatus==7) {
+            this.allRideList.splice(index,1)
+            this.totalItems--
+          } else {
+            this.allRideList[index].ridestatus=res.ride.ridestatus
+          }
         }
       }
       // this.fetchRideList()

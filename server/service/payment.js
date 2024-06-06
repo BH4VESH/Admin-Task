@@ -62,9 +62,9 @@ exports.chargeCustomer = async (customerId, amount, driverAcc, ride) => {
         const defaultPaymentMethodId = customer.invoice_settings.default_payment_method;
 
         console.log("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", customer)
-        if (!defaultPaymentMethodId) {
-            return { success: false, message: 'No default payment method found for the customer' };
-        }
+        // if (!defaultPaymentMethodId) {
+        //     return { success: false, message: 'No default payment method found for the customer' };
+        // }
 
         if (!customer.default_source) {
             return { success: false, message: 'Case Payment' };

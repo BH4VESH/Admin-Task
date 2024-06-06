@@ -1,6 +1,7 @@
 const SaveRideModel = require('../models/createRide');
 const User = require('../models/userModel');
 const {mongoose } = require('mongoose');
+const Feedback = require('../models/ridehistoryModel');
 
 // first get all ride
 exports.getRideList = async (req, res) => {
@@ -295,6 +296,25 @@ exports.searchRides = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+exports.feedback = async (req, res) => {
+  const rideId=req.body.rideId;
+  const rating=req.body.feedback.rating;
+  const feedback=req.body.feedback.feedback;
+  try {
+
+    const feedbackData = await SaveRideModel.findByIdAndUpdate(
+      rideId,
+      { feedback: { rating,feedback } },
+      { new: true } 
+  );
+    
+    res.json({ success: true, message:"feedback send successfully",feedbackData});
+  } catch (error) {
+    
+  }
+
+}
 
 
 

@@ -63,6 +63,7 @@
                             <th>Drop off address</th>
                             <th>Service type</th>
                             <th>Status</th>
+                            <th>Feedback</th>
                             <th>Export</th>
                         </tr>
                     </thead>
@@ -82,6 +83,9 @@
                                 <span class="btn btn-danger btn-sm" *ngSwitchCase="3" [ngClass]="{'badge-success': ride.ridestatus === 3}">Canceled</span>
                                 <span class="btn btn-info btn-sm" *ngSwitchCase="7" [ngClass]="{'badge-success': ride.ridestatus === 7}">Completed</span>
                                
+                            </td>
+                            <td>
+                                <button class="btn bg-light text-dark border btn-sm" (click)="feedback(ride)" data-bs-toggle="modal" data-bs-target="#feedbackModel" >{{ride.feedback ? 'Feedback Submitted' : 'Feedback' }}</button> 
                             </td>
                             <td>
                                 <button class="btn bg-light text-dark border btn-sm" (click)="download(ride)"  >Download</button> 
@@ -215,4 +219,47 @@
     </div>
 </div>
 
+<!-- ------------------feedback model------------------>
 
+<div class="modal fade" id="feedbackModel" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header d-flex justify-content-center bg-info">
+                <h2>Give Feedback</h2>
+            </div>
+
+            <div class="modal-body">
+            
+                <div class="container-fluid mt-5">
+                    <div class="row justify-content-center">
+                        <div class="col">
+                            <form [formGroup]="feedbackForm" (ngSubmit)="onSubmit()">
+                                <div class="mb-3">
+                                    <label for="rating" class="form-label">Rating : </label>
+                                    <div class="rating">
+                                        <input type="radio" formControlName="rating" id="rating5" [value]=5><label for="rating5">&#9733;</label>
+                                        <input type="radio" formControlName="rating" id="rating4" [value]=4><label for="rating4">&#9733;</label>
+                                        <input type="radio" formControlName="rating" id="rating3" [value]=3><label for="rating3">&#9733;</label>
+                                        <input type="radio" formControlName="rating" id="rating2" [value]=2><label for="rating2">&#9733;</label>
+                                        <input type="radio" formControlName="rating" id="rating1" [value]=1><label for="rating1">&#9733;</label>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="feedback" class="form-label">Feedback : </label>
+                                    <textarea class="form-control" id="feedback" rows="3" formControlName="feedback" placeholder="Enter your feedback"></textarea>
+                                </div>
+                                <div class="text-end">
+                                    <button *ngIf="submitBtn" type="submit" class="btn btn-primary"  [disabled]="feedbackForm.invalid" data-bs-dismiss="modal">Submit</button>
+                                </div>
+                            </form>
+                        </div>
+
+
+                    </div>
+                </div>
+            
+            </div>
+               
+        </div>
+    </div>
+</div>

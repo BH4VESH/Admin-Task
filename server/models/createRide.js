@@ -46,7 +46,13 @@ const saveRideSchema = new mongoose.Schema({
       nearestArray: {
         type: Array
       },
-
+      feedback:{
+        type:{
+          rating:Number,
+          feedback:String
+        },
+        default:null
+      }
 },
 {
   timestamps: true,
