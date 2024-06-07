@@ -1,5 +1,6 @@
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
+import {MatDateRangePicker, MatDatepickerModule} from '@angular/material/datepicker';
 import { RideHistoryService } from '../../services/ride-history.service';
 import { ToastrService } from 'ngx-toastr';
 import { VehicleService } from '../../services/vehicle.service';
@@ -8,27 +9,36 @@ import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } 
 import { DurationConvertPipe } from '../../pipes/duration-convert.pipe';
 import { SocketService } from '../../services/socket.service';
 import { rideDetails} from '../../models/rideHistory';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
 
 declare const google: any;
 
 @Component({
   selector: 'app-ride-history',
   standalone: true,
-  imports: [CommonModule,MatPaginatorModule, FormsModule, DurationConvertPipe,ReactiveFormsModule],
+  imports: [CommonModule,MatPaginatorModule, FormsModule, DurationConvertPipe,ReactiveFormsModule,MatFormFieldModule, MatInputModule, MatDatepickerModule, MatButtonModule],
   templateUrl: './ride-history.component.html',
-  styleUrl: './ride-history.component.css'
+  styleUrl: './ride-history.component.css',
+  // encapsulation: ViewEncapsulation.ShadowDom
 })
 export class RideHistoryComponent implements OnInit {
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild('mapContainer', { static: true }) mapContainer!: ElementRef<HTMLElement>;
   feedbackForm: FormGroup;
+ 
 
   search: string = '';
   statusSearch: number=-1 
   vehicleSearch: string = '';
   searchText: any
-  searchDate: any 
+  // searchDate: any 
+  startDate: string | null = null;
+  endDate: string | null = null;
+  startDateObj: Date | null = null;
+  endDateObj: Date | null = null; 
 
   currentPage: number = 1;
   totalItems: number = 0;
@@ -66,7 +76,6 @@ export class RideHistoryComponent implements OnInit {
   }
 
 
-
   fetchRideList(): void {
     this.RideHistoryService.getRideList(this.currentPage, this.itemsPerPage).subscribe(
       (response: any) => {
@@ -89,8 +98,8 @@ export class RideHistoryComponent implements OnInit {
   onPageChange(event: any): void {
     this.currentPage = event.pageIndex + 1;
     
-    if (this.search || this.statusSearch !==-1 || this.vehicleSearch!=='' || this.searchDate) {
-      console.log("79 line search work")
+    if (this.search || this.statusSearch !==-1 || this.vehicleSearch!=='' || this.startDate || this.endDate) {
+      console.log("100 line search work")
       this.performSearch()
     } else {
       console.log("else part")
@@ -108,8 +117,24 @@ export class RideHistoryComponent implements OnInit {
     })
   }
 
+  formatDate(date: Date): string {
+    var year = date.getFullYear();
+    var month = (date.getMonth() + 1).toString().padStart(2, '0'); // Months are zero-based
+    var day = date.getDate().toString().padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+
   performSearch() {
-    this.RideHistoryService.searchRides(this.statusSearch,this.vehicleSearch,this.searchText,this.searchDate,this.currentPage,this.itemsPerPage).subscribe((result) => {
+
+    if (this.startDateObj && this.endDateObj) {
+      this.startDate = this.formatDate(this.startDateObj);
+      this.endDate = this.formatDate(this.endDateObj);
+    } else {
+      this.startDate = null;
+      this.endDate = null;
+    }
+    this.RideHistoryService.searchRides(this.statusSearch,this.vehicleSearch,this.searchText,this.startDate!, this.endDate!,this.currentPage,this.itemsPerPage).subscribe((result) => {
       // Handle the search result here
       // this.allRideList=[]
       this.allRideList=result.result
@@ -122,7 +147,9 @@ export class RideHistoryComponent implements OnInit {
     this.statusSearch = -1;
     this.vehicleSearch = '';
     this.searchText = '';
-    this.searchDate = '';
+    this.startDateObj=null
+    this.endDateObj=null
+
     this.fetchRideList()
   }
 
@@ -193,11 +220,13 @@ export class RideHistoryComponent implements OnInit {
 
   // drow path
   drawPath(from: string, to: string, stops: string[]): void {
+    let markerIndex = 1;
     this.geocodeAddress(from, (originCoords) => {
       if (!originCoords) {
         console.error('Geocoding origin address failed');
         return;
       }
+      this.placeMarker(originCoords, 'Origin', markerIndex++);
 
       this.geocodeAddress(to, (destinationCoords) => {
         if (!destinationCoords) {
@@ -217,6 +246,14 @@ export class RideHistoryComponent implements OnInit {
           });
 
           this.polyline.setMap(this.map);
+
+          waypoints.forEach((stopCoords, index) => {
+            this.placeMarker(stopCoords, `Stop ${index + 1}`,markerIndex++);
+          });
+
+          this.placeMarker(destinationCoords, 'Destination', markerIndex++);
+
+
           const bounds = new google.maps.LatLngBounds();
           path.forEach(coords => bounds.extend(coords));
           this.map.fitBounds(bounds);
@@ -256,6 +293,15 @@ export class RideHistoryComponent implements OnInit {
           callback(waypoints);
         }
       });
+    });
+  }
+
+  placeMarker(position: google.maps.LatLng, title: string, index: number): void {
+    new google.maps.Marker({
+      position: position,
+      map: this.map,
+      title: title,
+      label: index.toString() 
     });
   }
 

@@ -16,8 +16,8 @@ export class RideHistoryService {
     return this.http.get<any>(`${this.baseUrl}/getRideList?page=${page}&limit=${limit}`);
   }
 
-  searchRides(statusSearch: number, vehicleSearch: string, searchText: string,searchDate:string, page: number, limit: number): Observable<any> {
-    return this.http.post(`${this.baseUrl}/search`, {statusSearch, vehicleSearch, searchText,searchDate, page, limit});
+  searchRides(statusSearch: number, vehicleSearch: string, searchText: string,startDate: string, endDate: string, page: number, limit: number): Observable<any> {
+    return this.http.post(`${this.baseUrl}/search`, {statusSearch, vehicleSearch, searchText,startDate,endDate, page, limit});
   }
 
   submitFeedback(rideId:string,feedback: feedback): Observable<any> {

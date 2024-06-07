@@ -356,12 +356,14 @@ export class UserComponent implements OnInit, AfterViewInit {
   }
 
   selectedCostomer(CostomerId: string) {
+    this.clearCardInput()
     console.log("CostomerId :", CostomerId)
     this.CostomerId = CostomerId;
     this.getCustomerCards(this.CostomerId)
 
   }
   getCustomerCards(customerId: string): void {
+    this.cards=[]
     this.CardService.getCustomerCards(customerId)
       .subscribe(
         (response: CustomerCardsResponse) => {

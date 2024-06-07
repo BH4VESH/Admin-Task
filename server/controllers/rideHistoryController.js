@@ -135,7 +135,9 @@ exports.searchRides = async (req, res) => {
     let search = req.body.searchText;
     let statusSearch = parseInt(req.body.statusSearch, 10);
     let vehicleSearch = req.body.vehicleSearch;
-    let date = req.body.searchDate;
+    // let date = req.body.searchDate;
+    let startDate = req.body.startDate;
+    let endDate = req.body.endDate;
 
     console.log(req.body);
     
@@ -159,8 +161,16 @@ exports.searchRides = async (req, res) => {
     
         const matchCriteria = [];
 
-        if (date) {
-            matchCriteria.push({ date: { $regex: new RegExp(date, "i") }})
+        // if (date) {
+        //     matchCriteria.push({ date: { $regex: new RegExp(date, "i") }})
+        // }
+        if (startDate && endDate) {
+          matchCriteria.push({
+            date: {
+              $gte:startDate,
+              $lte:endDate
+            }
+          });
         }
         
         if (statusSearch !== -1) {

@@ -7,6 +7,7 @@ import { tokenInterceptor } from './token.interceptor';
 
 import { routes } from './app.routes';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
+import { provideNativeDateAdapter } from '@angular/material/core';
 
 export const appConfig: ApplicationConfig = {
   providers: [provideRouter(routes),
@@ -15,6 +16,7 @@ export const appConfig: ApplicationConfig = {
   provideAnimationsAsync(),
   provideHttpClient(
     withInterceptors([tokenInterceptor]),
-  )
+  ),
+  provideNativeDateAdapter()
 ]
 };
