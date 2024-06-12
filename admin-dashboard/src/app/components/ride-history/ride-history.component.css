@@ -72,3 +72,7 @@
     color: #f0ad4e;
 } 
 
+/* date */
+::placeholder {
+  color: #c5c4c4;
+}

@@ -9,23 +9,23 @@
             <div class="row ">
 
                 <div class="col col-12 col-md-6 mt-2">
-
+                
                     <select class="custom-select form-control" id="filter-dropdown" [(ngModel)]="statusSearch">
-
+                
                         <option value="" disabled selected>Select Country Code</option>
                         <option value="-1">Select Status</option>
                         <option [value]="3">Canceled</option>
                         <option [value]="7">Completed</option>
                     </select>
-
-                    <input class="form-control mt-4" type="text" id="search-input"
-                        placeholder="Search by Req.Id,Location, Name, Phone," [(ngModel)]="searchText">
-
+                
+                
                     <select class="form-control mt-4 " id="filter-dropdown" [(ngModel)]="vehicleSearch">
                         <option value="">Select a vehicle</option>
                         <option [value]="vehicle._id" *ngFor="let vehicle of vehicleList">{{vehicle.name}}</option>
                     </select>
-
+                    <input class="form-control mt-4" type="text" id="search-input" placeholder="Search by Req.Id,Location, Name, Phone,"
+                        [(ngModel)]="searchText">
+                
                 </div>
                 <div class="col col-12 col-md-6 mt-2">
 
@@ -33,10 +33,10 @@
                         <mat-form-field class="mb-2">
                             <mat-label>Enter a date range</mat-label>
                             <mat-date-range-input [rangePicker]="rangePicker">
-                                <input matStartDate placeholder="Start date" [(ngModel)]="startDateObj">
-                                <input matEndDate placeholder="End date" [(ngModel)]="endDateObj">
+                                <input class="startDate" matStartDate placeholder="Start date" [(ngModel)]="startDateObj">
+                                <input class="endDate" matEndDate placeholder="End date" [(ngModel)]="endDateObj">
                             </mat-date-range-input>
-                            <mat-hint>MM/DD/YYYY – MM/DD/YYYY</mat-hint>
+                            <mat-hint class="label">MM/DD/YYYY – MM/DD/YYYY</mat-hint>
                             <mat-datepicker-toggle matIconSuffix [for]="rangePicker"></mat-datepicker-toggle>
                             <mat-date-range-picker #rangePicker>
                                 <mat-date-range-picker-actions>

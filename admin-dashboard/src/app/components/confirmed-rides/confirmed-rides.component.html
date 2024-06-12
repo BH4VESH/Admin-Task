@@ -3,14 +3,14 @@
 <!-- ------------------------------------------------------------------------------- -->
 <!-- filter -->
 <div class="container-fluid ">
-    <div class="input-group-prepend ">
+    <div class="input-group-prepend  ">
         <div class="navbar navbar-dark bg-secondary mt-5 d-flex align-items-center justify-content-center">
             <h1 class="pt-3">Confirm Ride</h1>
           </div>
-        <div class="container d-flex pt-5 gap-2">
-            <div class="col-6 ">
+        <div class="container d-flex pt-4 ">
+            <div class="col-6">
     
-                <select class="custom-select form-control" id="filter-dropdown" [(ngModel)]="statusSearch">
+                <select class="custom-select form-control p" id="filter-dropdown" [(ngModel)]="statusSearch">
         
                     <option value="" disabled selected>Select Country Code</option>
                     <option value="-1">Select Status</option>
@@ -34,14 +34,14 @@
             </div>
         </div>
          <!-- btn -->
-         <div class="mx-auto container gap-2 d-flex align-items-center justify-content-center mt-3">
-            <div class="d-grid gap-2 col-6 mx-auto">
-               <button class="btn btn-info" type="button" id="searchbtn" (click)="performSearch()">Search</button>    
+        <div class="mx-auto container gap-2 d-flex align-items-center justify-content-center mt-3">
+            <div class="d-grid  col-6 mx-auto">
+                <button class="btn btn-info" type="button" id="searchbtn" (click)="performSearch()">Search</button>
             </div>
-            <div class="d-grid gap-2 col-6 mx-auto">    
-               <button class="btn bg-warning text-dark" type="button" id="clearbtn" (click)="clearFields()">Clear</button>
+            <div class="d-grid  col-6 mx-auto">
+                <button class="btn bg-warning text-dark" type="button" id="clearbtn" (click)="clearFields()">Clear</button>
             </div>
-    </div>
+        </div>
 
     </div>
     <hr>
@@ -77,52 +77,56 @@
                             <td>{{ride.fromLocation}}</td>
                             <td>{{ride.toLocation}}</td>
                             <td>{{ride.service.name}}</td>
-
-                            
+                    
+                    
                             <td [ngSwitch]="ride.ridestatus">
-                                <span class="statusbadge" *ngSwitchCase="1" [ngClass]="{'badge-assigning': ride.ridestatus === 1}">Assigning</span>
-                                <span class="statusbadge" *ngSwitchCase="2" [ngClass]="{'badge-rejected': ride.ridestatus === 2}">Rejected</span>
-                                <span class="statusbadge" *ngSwitchCase="4" [ngClass]="{'badge-accepted': ride.ridestatus === 4}">Accepted</span>
-                                <span class="statusbadge" *ngSwitchCase="5" [ngClass]="{'badge-arrived': ride.ridestatus === 5}">Arrived</span>
-                                <span class="statusbadge" *ngSwitchCase="6" [ngClass]="{'badge-started': ride.ridestatus === 6}">Started</span>
-                                <span class="statusbadge" *ngSwitchCase="7" [ngClass]="{'badge-completed': ride.ridestatus === 7}">Completed</span>
+                                <span class="statusbadge" *ngSwitchCase="1"
+                                    [ngClass]="{'badge-assigning': ride.ridestatus === 1}">Assigning</span>
+                                <span class="statusbadge" *ngSwitchCase="2"
+                                    [ngClass]="{'badge-rejected': ride.ridestatus === 2}">Rejected</span>
+                                <span class="statusbadge" *ngSwitchCase="4"
+                                    [ngClass]="{'badge-accepted': ride.ridestatus === 4}">Accepted</span>
+                                <span class="statusbadge" *ngSwitchCase="5"
+                                    [ngClass]="{'badge-arrived': ride.ridestatus === 5}">Arrived</span>
+                                <span class="statusbadge" *ngSwitchCase="6"
+                                    [ngClass]="{'badge-started': ride.ridestatus === 6}">Started</span>
+                                <span class="statusbadge" *ngSwitchCase="7"
+                                    [ngClass]="{'badge-completed': ride.ridestatus === 7}">Completed</span>
                                 <span class="statusbadge" *ngSwitchCase="8" [ngClass]="{'badge-hold': ride.ridestatus === 8}">Hold</span>
-                                <span class="statusbadge" *ngSwitchCase="9" [ngClass]="{'badge-picked': ride.ridestatus === 9}">Picked</span>
-                                <span class="statusbadge" [ngClass]="{'badge-pending': ride.ridestatus === 0}" *ngSwitchDefault>Pending</span>
-                              </td>
-                              
-                              
-                           
-                            <!-- <td>
-                                <button class="btn btn-success" *ngIf="ride.ridestatus!==0">{{ ride.driver.username }}</button>
-                                 <button type="button" class="btn btn-sm btn-outline-success me-2" *ngIf="ride.ridestatus==0" (click)="asignBtn(ride.driver._id,ride._id)"
-                                >Assign</button>
-                            </td> -->
-
+                                <span class="statusbadge" *ngSwitchCase="9"
+                                    [ngClass]="{'badge-picked': ride.ridestatus === 9}">Picked</span>
+                                <span class="statusbadge" [ngClass]="{'badge-pending': ride.ridestatus === 0}"
+                                    *ngSwitchDefault>Pending</span>
+                            </td>
+                    
+                    
                             <td>
                                 <button class="btn btn-success" *ngIf="ride.driverId">{{ride.driver.username }}</button>
-                                <button class="btn btn-primary"  data-bs-toggle="modal" data-bs-target="#assignModel" *ngIf="!ride.driverId" (click)="openAssignDriverDialog(ride)">Assign</button>
-                                <!-- <button class="btn btn-primary"  data-bs-toggle="modal" data-bs-target="#assignModel" (click)="asignBtn(ride)"  *ngIf="!ride.driverId">Assign</button> -->
+                                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#assignModel" *ngIf="!ride.driverId"
+                                    (click)="openAssignDriverDialog(ride)">Assign</button>
                             </td>
-                            
+                    
                             <!-- --------------------------show info  -->
-                            <div class="dropdown">
-                                <button class=" btn btn-secondary dropdown-toggle" type="button " id="dropdownMenu2" data-bs-toggle="dropdown"
-                                    aria-expanded="false">
-                                    Actions
-                                </button>
-                            
-                                <ul class=" dropdown-menu " aria-labelledby="dropdownMenu2">
-                                    <div class="d-grid gap-2">
-                                        <button type="button" data-bs-toggle="modal" data-bs-target="#infoModel"
-                                            class="btn btn-sm btn-outline-primary me-2 ms-2" (click)="rideInfo(ride._id)">Info</button>
-                                        <button *ngIf="ride.ridestatus === 0 || ride.ridestatus === 2" type="button" class="btn btn-sm btn-outline-danger me-2 ms-2" (click)="cancelRide(ride._id)">Delete</button>
-                                    </div>
-                            
-                            
-                                </ul>
-                            </div>
-
+                            <td>
+                    
+                                <div class="dropdown">
+                                    <button class=" btn btn-secondary dropdown-toggle" type="button " id="dropdownMenu2"
+                                        data-bs-toggle="dropdown" aria-expanded="false">
+                                        Actions
+                                    </button>
+                    
+                                    <ul class=" dropdown-menu " aria-labelledby="dropdownMenu2">
+                                        <div class="d-grid gap-2">
+                                            <button type="button" data-bs-toggle="modal" data-bs-target="#infoModel"
+                                                class="btn btn-sm btn-outline-primary me-2 ms-2" (click)="rideInfo(ride._id)">Info</button>
+                                            <button *ngIf="ride.ridestatus === 0 || ride.ridestatus === 2" type="button"
+                                                class="btn btn-sm btn-outline-danger me-2 ms-2"
+                                                (click)="cancelRide(ride._id)">Delete</button>
+                                        </div>
+                                    </ul>
+                                </div>
+                            </td>
+                    
                             <!-- --------------------------show info  -->
                         </tr>
                     </tbody>
