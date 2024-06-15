@@ -9,6 +9,7 @@ import { Coordinate, User, getVehiclePrice } from '../../models/createRide';
 import { SettingService } from '../../services/setting.service';
 import { CityService } from '../../services/city.service';
 import { CardService } from '../../services/card.service';
+import { Router } from '@angular/router';
 
 declare const google: any;
 
@@ -58,6 +59,7 @@ export class CreateRideComponent implements OnInit, AfterViewInit {
     private toastrService: ToastrService,
     private CreateRideService: CreateRideService,
     private SettingService: SettingService,
+    private router: Router
   ) {
     this.autocompleteService = new google.maps.places.AutocompleteService();
     this.directionsService = new google.maps.DirectionsService();
@@ -220,7 +222,9 @@ export class CreateRideComponent implements OnInit, AfterViewInit {
         // this.isPointInsidePolygon(place, placeMarker, 'from');
         if ( res.inside) {
             placeMarker(place, 'from');
-            this.zoneCityId = this.users[0].city._id
+            // this.zoneCityId = this.users[0].city._id
+            this.zoneCityId = res.result[0]._id
+            console.log("zzzzzzzzzzzzzzzzzzzzzzzz",this.zoneCityId)
             this.getVehiclePrice()
         } else {
           this.fromToInput.patchValue({
@@ -251,6 +255,7 @@ export class CreateRideComponent implements OnInit, AfterViewInit {
       autocomplete.addListener('place_changed', () => {
         const place = autocomplete.getPlace();
         placeMarker(place, 'stop');
+        this.drawPath();
       });
     });
   }
@@ -345,9 +350,9 @@ export class CreateRideComponent implements OnInit, AfterViewInit {
       console.log("thise is stopMarkers:", this.stopsMarkers)
     }
 
-    if (this.fromToInput.get('from')?.value && this.fromToInput.get('to')?.value) {
-      this.drawPath();
-    }
+    // if (this.fromToInput.get('from')?.value && this.fromToInput.get('to')?.value) {
+    //   this.drawPath();
+    // }
     this.map.setCenter(place.geometry.location);
     // console.log(place.geometry.location.lat())
     // console.log(place.geometry.location.lng())
@@ -360,6 +365,9 @@ console.log(this.ifInsideZone)
     if (this.ifInsideZone) {
       if (!fromValue && !toValue) {
         this.toastrService.error('Please select "from" and "to" location.');
+        this.priceData=[]
+        this.distance=0
+        this.duration=0
       } else if (!fromValue) {
         if (this.fromMarker) {
           this.fromMarker.setMap(null);
@@ -368,6 +376,9 @@ console.log(this.ifInsideZone)
           this.directionsRenderer = null;
         }
         this.toastrService.error('Please select "From" location.');
+        this.priceData=[]
+        this.distance=0
+        this.duration=0
       }
       else if (!toValue) {
         if (this.toMarker) {
@@ -377,19 +388,31 @@ console.log(this.ifInsideZone)
           this.directionsRenderer = null;
         }
         this.toastrService.error('Please select "To" location.');
-      } else if (fromValue === toValue || this.fromMarker==this.toMarker) {
-        console.log(fromValue, toValue)
-        this.toastrService.error('Invalid: Same input location for "From" and "To".');
+        this.priceData=[]
+        this.distance=0
+        this.duration=0
+      }
+       else if ((fromValue === toValue || this.fromMarker==this.toMarker) && this.stopsMarkers.length==0) {
+        console.log(fromValue, toValue,this.stopsMarkers.length)
+        this.toastrService.error('Invalid: Same input location for "From" and "To",plz add stop.' );
+        this.priceData=[]
+        this.distance=0
+        this.duration=0
         // this.fromMarker=null
         // this.toMarker=null
-      } else {
+      } 
+      else {
         // check price not awilable in selected city
         if (this.allPriceData.length == 0) {
           this.toastrService.warning(" Not awailable any price,plz enter price from vehicle pricing section")
           this.priceData = []
+          this.distance=0
+          this.duration=0
           // this.fromMarker=null
         } else {
-          this.calculateDistance();
+          // this.calculateDistance();
+          // this.calculateRoute();
+          this.drawPath()
         }
       }
     } else {
@@ -397,65 +420,22 @@ console.log(this.ifInsideZone)
       this.distance = 0
       this.duration = 0
       this.zoneCityId = ""
+      this.priceData=[]
       // this.fromToInput.reset()
       // this.resetMarkersAndData()
     }
   }
- 
 
-  calculateDistance(): void {
-    const service = new google.maps.DistanceMatrixService();
-    const origins: google.maps.LatLng[] = [this.fromMarker?.getPosition()!];
-    const destinations: google.maps.LatLng[] = [this.toMarker?.getPosition()!];
 
-    for (const stopMarker of this.stopsMarkers) {
-      const position = stopMarker.getPosition();
-      if (position) {
-        destinations.push(position);
-      }
-    }
-    const data = {
-      origins: origins,
-      destinations: destinations,
-      travelMode: 'DRIVING'
-    };
-
-    service.getDistanceMatrix(data,
-      (response: google.maps.DistanceMatrixResponse, status: google.maps.DistanceMatrixStatus) => {
-        if (status === 'OK' && response.rows.length > 0 && response.rows[0].elements.length > 0) {
-          console.log("asdfasdfsd", response)
-          let totalDistance = 0;
-          let totalDuration = 0;
-          for (const row of response.rows) {
-            for (const element of row.elements) {
-              if (element.status === 'OK') {
-                totalDistance += element.distance.value;//meter
-                totalDuration += element.duration.value;//second
-              }
-            }
-          }
-          const distanceInKm = totalDistance / 1000;
-          this.distance = distanceInKm//km
-          const totalHours = Math.floor(totalDuration / 3600);
-          const remainingSeconds = totalDuration % 3600;
-          const totalMinutes = Math.floor(remainingSeconds / 60);
-          this.duration = `${totalHours}, hours, ${totalMinutes}, minutes`
-
-          this.priceCalculation(distanceInKm, totalDuration)//estimete fare
-
-        } else {
-          console.error('Error calculating distance:', status);
-        }
-      }
-    );
-  }
-
-  // drow path
+//  drow path & calculate
   drawPath(): void {
     const waypoints = this.stopsMarkers.map(marker => ({
       location: marker.getPosition()!,
       stopover: true
     }));
+
+    console.log(this.fromMarker?.getPosition())
+    console.log(this.toMarker?.getPosition())
 
     const request = {
       origin: this.fromMarker?.getPosition()!,
@@ -478,13 +458,39 @@ console.log(this.ifInsideZone)
             strokeWeight: 4
           }
         });
-        this.directionsRenderer!.setDirections(response);
+
+        if (status === 'OK' && response) {
+          this.directionsRenderer!.setDirections(response);
+          const route = response.routes[0];
+          let totalDistance = 0;
+          let totalDuration = 0;
+    
+          for (let i = 0; i < route.legs.length; i++) {
+            totalDistance += route.legs[i].distance!.value; // distance in meters
+            totalDuration += route.legs[i].duration!.value; // duration in seconds
+          }
+    
+          const distanceInKm = totalDistance / 1000;
+          this.distance = distanceInKm//km
+          const totalHours = Math.floor(totalDuration / 3600);
+          const remainingSeconds = totalDuration % 3600;
+          const totalMinutes = Math.floor(remainingSeconds / 60);
+          this.duration = `${totalHours}, hours, ${totalMinutes}, minutes`
+    
+          this.priceCalculation(distanceInKm, totalDuration)//estimete fare
+    
+          console.log('Total Distance:',  Math.round(totalDistance / 1000), 'km');
+          console.log('Total Duration:', Math.round(totalDuration / 60), 'minutes');
+        } else {
+          console.error('Directions request failed due to ' + status);
+        }
+        
       } else {
         console.error('Error calculating distance:', status);
       }
     });
   }
-
+  
   // get vihicle price from selected city in the data
   getVehiclePrice(): void {
     if (!this.zoneCityId) {
@@ -719,6 +725,7 @@ console.log(this.ifInsideZone)
           this.selectedBookingOption = ''
           this.selectedDate=''
           this.selectedTime=''
+          this.router.navigate(['/admin/confirmed_rides']);
         }
       })
     } else {

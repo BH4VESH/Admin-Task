@@ -38,6 +38,7 @@ export class HeaderComponent implements OnInit{
     this.listingCronUpdate()
     this.pagerefreshEmit()
     this.pagerefrshLisn()
+    this.deletLisn()
   
   }
 
@@ -75,5 +76,11 @@ export class HeaderComponent implements OnInit{
     });
   }
 
+  // cancel ride
+  deletLisn() {
+    this.SocketService.listencancelride().subscribe((res: any) => {
+      this.notif_counter=res.counter
+    })
+  }
 
 }

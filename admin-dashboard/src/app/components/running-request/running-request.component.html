@@ -63,7 +63,7 @@
                     <span class="statusbadge" *ngSwitchCase="7" [ngClass]="{'badge-completed': data.ridestatus === 7}">Completed</span>
                     <span class="statusbadge" *ngSwitchCase="9" [ngClass]="{'badge-picked': data.ridestatus === 9}">Picked</span>
                     <span class="statusbadge" [ngClass]="{'badge-pending': data.ridestatus === 0}" *ngSwitchDefault>Pending</span>
-
+                  </td>
                 <!-- accept btn show -->
                   <!-- <td>{{data.estimateFare}}</td> -->
                   <td class="d-flex gap-3" [ngSwitch]="data.ridestatus">
@@ -72,12 +72,15 @@
                     <button class="btn btn-light border" *ngSwitchCase="4" (click)="arriveRide(data)">Arrive</button>
                     <button class="btn btn-light border" *ngSwitchCase="5" (click)="pickRide(data)">Pick Up</button>
                     <button class="btn btn-light border" *ngSwitchCase="6" (click)="completeRide(data);freerideanddriver(data)">Complete</button>
-                    <!-- <button class="btn btn-light border" *ngSwitchCase="7" (click)="freerideanddriver(data)">Feedback</button>  -->
-
+                  
                 
                     <!-- ride reject btn -->
                     <button class="btn btn-danger norder"  *ngIf="data.ridestatus === 1 || data.ridestatus === 4 || data.ridestatus === 5 || data.ridestatus === 9" data-bs-target="null" (click)="rejectRide(data)">Reject Ride</button>
                   </td>
+                    <!-- <button class="btn btn-danger norder"  *ngIf="data.ridestatus === 1 || data.ridestatus === 8 "
+                    data-bs-target="null" (click)="rejectRide(data)">Reject Ride</button> 
+                    </td>
+                -->
                   <!-- timer -->
                   <td>{{ data.countdown}}</td>
                 </tr>

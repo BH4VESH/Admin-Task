@@ -34,7 +34,7 @@
             </div>
         </div>
          <!-- btn -->
-        <div class="mx-auto container gap-2 d-flex align-items-center justify-content-center mt-3">
+        <div class="mx-auto container  d-flex align-items-center justify-content-center mt-3">
             <div class="d-grid  col-6 mx-auto">
                 <button class="btn btn-info" type="button" id="searchbtn" (click)="performSearch()">Search</button>
             </div>
@@ -70,7 +70,7 @@
                     </thead>
                     <tbody>
                         <tr *ngFor="let ride of allRideList;">
-                            <td>{{ ride._id}}</td>
+                            <td>{{ ride.uniqueId}}</td>
                             <td>{{ ride.userId }}</td>
                             <td>{{ride.user.username}}</td>
                             <td>{{ ride.scheduledDate | date: 'dd-MM-yyyy' }}</td>
@@ -102,8 +102,16 @@
                     
                             <td>
                                 <button class="btn btn-success" *ngIf="ride.driverId">{{ride.driver.username }}</button>
-                                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#assignModel" *ngIf="!ride.driverId"
+
+                                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#assignModel" *ngIf="!ride.driverId &&  ride.ridestatus===0 && ride.assigned==null"
                                     (click)="openAssignDriverDialog(ride)">Assign</button>
+
+                                <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#assignModel" *ngIf="!ride.driverId &&  ride.ridestatus===0 && ride.assigned >= 1"
+                                    (click)="openAssignDriverDialog(ride)">Reassign</button>
+
+                                <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#assignModel" *ngIf="!ride.driverId &&  ride.ridestatus===2"
+                                    (click)="openAssignDriverDialog(ride)">Reassign</button>
+                                    
                             </td>
                     
                             <!-- --------------------------show info  -->
@@ -121,7 +129,7 @@
                                                 class="btn btn-sm btn-outline-primary me-2 ms-2" (click)="rideInfo(ride._id)">Info</button>
                                             <button *ngIf="ride.ridestatus === 0 || ride.ridestatus === 2" type="button"
                                                 class="btn btn-sm btn-outline-danger me-2 ms-2"
-                                                (click)="cancelRide(ride._id)">Delete</button>
+                                                (click)="cancelRide(ride._id)">Cancel</button>
                                         </div>
                                     </ul>
                                 </div>
@@ -167,7 +175,7 @@
                         <div class="">
                             <div>
                                 <b>Request Id :</b>
-                                <p>{{ data._id }}</p>
+                                <p>{{ data.uniqueId }}</p>
                             </div>
 
                             <div>
@@ -307,7 +315,7 @@
                     <div class="">
                         <div>
                             <b>Request Id :</b>
-                            <p>{{ data._id }}</p>
+                            <p>{{ data.uniqueId }}</p>
                         </div>
 
                         <div>

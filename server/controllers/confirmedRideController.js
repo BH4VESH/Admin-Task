@@ -140,16 +140,16 @@ exports.searchRides = async (req, res) => {
     
         const matchStage = {};
         if (search) {
-          var searchObjectId;
+          // var searchObjectId;
     
-          if (search.length == 24) {
-            searchObjectId = new mongoose.Types.ObjectId(search);
-          }
+          // if (search.length == 24) {
+          //   searchObjectId = new mongoose.Types.ObjectId(search);
+          // }
     
           matchStage.$or = [
             { "user.username": { $regex: new RegExp(search, "i") } },
             { "user.phone": { $regex: new RegExp(search, "i") } },
-            { _id: searchObjectId },
+            { "uniqueId": { $regex: new RegExp(search, "i") } },
           ];
         }
     
@@ -291,14 +291,35 @@ exports.delete = async (req, res) => {
   try {
     const ridedata = await SaveRideModel.findByIdAndUpdate(
      { _id:rideId},
-      { ridestatus: 3 },
+      { ridestatus: 3 ,assigned:0},
       { new: true }
     );
     // console.log(ridedata);
+    var counter=await SaveRideModel.aggregate(
+      [
+        {
+          $group: {
+            _id: null,
+            count: {
+              $sum: "$assigned",
+            },
+          },
+        },
+      ]
+    )
+
+    var counter2 = counter[0].count
+    if (counter2 <= 0) {
+      counter2 = 0
+    } else {
+      counter2 = counter[0].count
+    }
+
     global.io.emit("cancelridedata", {
       success: true,
       message: "Ride Cancelled Successfully",
       ridedata,
+      counter:counter2
     });
     res.json({success: true,message: "Ride Cancelled Successfully",ridedata})
   } catch (error) {

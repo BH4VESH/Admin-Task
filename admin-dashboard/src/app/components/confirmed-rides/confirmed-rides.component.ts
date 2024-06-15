@@ -307,15 +307,22 @@ export class ConfirmedRidesComponent implements OnInit {
    //-----------------------cancel ride-----------------------
   cancelRide(rideId: any) {
     console.log(rideId);
-    this.ConfirmedRidesService.delete(rideId).subscribe((ride) => {
-      console.log(ride)
-     })
+    this.ConfirmedRidesService.delete(rideId).subscribe((res) => {
+      console.log(res)
+      // this.allRideList
+      const index = this.allRideList.findIndex(ride => ride._id === res.ridedata
+        ._id);
+
+        if (index !== -1) {
+          this.allRideList.splice(index, 1);
+        }
+    })
 
   }
   deletLisn() {
     this.SocketService.listencancelride().subscribe((ridedata: any) => {
       this.ToastrService.warning(ridedata.message)
-      this.fetchRideList()
+      // this.fetchRideList()
     })
   }
 
@@ -365,6 +372,7 @@ export class ConfirmedRidesComponent implements OnInit {
         // console.log(this.allRideList[index].driver.assign)
         // this.allRideList[index].driver = res.cronRide.driverdata;
         this.allRideList[index].ridestatus=res.cronRide.ridedata.ridestatus
+        this.allRideList[index].assigned=res.cronRide.ridedata.assigned
         this.allRideList[index].driverId=null
       }
       // this.fetchRideList()
@@ -379,6 +387,7 @@ export class ConfirmedRidesComponent implements OnInit {
         // replace driver&ride data
         // this.allRideList[index].driver = res.cronRide.driverdata;
         this.allRideList[index].ridestatus=res.cronRide.ridedata.ridestatus
+        this.allRideList[index].assigned=res.cronRide.ridedata.assigned
         this.allRideList[index].driverId=res.cronRide.driverdata;
       }
       this.fetchRideList()
@@ -392,6 +401,7 @@ export class ConfirmedRidesComponent implements OnInit {
       if (index !== -1) {
 
         this.allRideList[index].ridestatus=res.cronRide.ridedata.ridestatus
+        this.allRideList[index].assigned=res.cronRide.ridedata.assigned
         this.allRideList[index].driverId=null
       }
       // this.fetchRideList()
@@ -405,6 +415,7 @@ export class ConfirmedRidesComponent implements OnInit {
 
       if (index !== -1) {
         this.allRideList[index].ridestatus=res.cronRide.ridedata.ridestatus
+        this.allRideList[index].assigned=res.cronRide.ridedata.assigned
         this.allRideList[index].driverId=null
       }
       // this.fetchRideList()

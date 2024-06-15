@@ -163,7 +163,7 @@ exports.checkPoint = async (req, res) => {
     ]);
     
     if (result.length > 0) {
-      res.json({success:true,message:'Point is inside a polygon',inside:true})
+      res.json({success:true,message:'Point is inside a polygon',inside:true,result})
       console.log('Point is inside a polygon');
     } else {
       res.json({success:true,message:'Point is outside all polygons',inside:false})

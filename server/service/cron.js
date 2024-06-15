@@ -70,17 +70,33 @@ cron.schedule('* * * * * *', async () => {
 
 
             console.log(".....................>>>>>>>>>>>>>>............")
-            var ridedata = await createrideModel.findByIdAndUpdate(request._id, { $set: { ridestatus: 0 }, $unset: { driverId: 1 } }, { new: true });
+            // var ridedata = await createrideModel.findByIdAndUpdate(request._id, { $set: { ridestatus: 0 }, $unset: { driverId: 1 },assigned: "reassign"}, { new: true } );
+            var ridedata = await createrideModel.findByIdAndUpdate(request._id, { $set: { ridestatus: 0 }, $unset: { driverId: 1 },assigned:1 }, { new: true } );
 
             var driverdata = await driverModel.findByIdAndUpdate(request.driverId, { $set: { assign: 0 } }, { new: true });
 
-            global.counter++
+            // for counter
+            var counter=await createrideModel.aggregate(
+              [
+                {
+                  $group: {
+                    _id: null,
+                    count: {
+                      $sum: "$assigned",
+                    },
+                  },
+                },
+              ]
+            )
+
+            // global.counter++
+            console.log("Counterrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr",counter[0].count)
             global.io.emit("cronUpdateData", {
               success: true,
               message: "timeoutdata",
               ridedata,
               driverdata,
-              counter
+              counter:counter[0].count
             });
 
             // console.log(request.driverId)
@@ -158,6 +174,7 @@ cron.schedule('* * * * * *', async () => {
                       { $eq: ["$status", true] },
                       { $eq: ["$cityId", "$$cityId"] },
                       { $eq: ["$serviceID", "$$vehicleId"] },
+                      // { $eq: ["$assign", "0"] },
                     ],
                   },
                 },
@@ -251,10 +268,24 @@ cron.schedule('* * * * * *', async () => {
       
       
       if (nearRequests) {
+        
+        console.log("NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN",nearRequests)
+        //  if(nearRequests.length==0)
+        //   {
+        //     const driverdata= await driverModel.findByIdAndUpdate(data.driverId, { assign: "1" });
 
-       
+        //     // -----------------Update ride
 
-          for (var data of nearRequests) {
+        //    const ridedata= await createrideModel.findByIdAndUpdate(data._id, {
+        //       $addToSet: { nearestArray: data.driverId },
+        //       assigningTime: data.assigningTime,
+        //       driverId: data.driverId,
+        //       ridestatus: 1,
+        //       // assigned:1
+        //     }, { new: true });
+        //   }
+        
+        for (var data of nearRequests) {
 
           const lastAssignedDriverId = await createrideModel.aggregate([
             {
@@ -293,7 +324,7 @@ cron.schedule('* * * * * *', async () => {
               assigningTime: data.assigningTime,
               driverId: data.driverId,
               ridestatus: 1,
-              assigned: "assigning"
+              // assigned:1
             }, { new: true });
 
             // /////////////////////////////pipeline timer perpose
@@ -414,8 +445,8 @@ cron.schedule('* * * * * *', async () => {
 
                const ridedata= await createrideModel.findByIdAndUpdate(data._id, {
                   driverId: null,
-                  ridestatus: 8,
-                  assigned: "hold"
+                  ridestatus: 8,//hold
+                  // assigned: "hold"
                 }, { new: true });
 
                 global.io.emit("cronUpdateData2B", {
@@ -437,17 +468,29 @@ cron.schedule('* * * * * *', async () => {
                   nearestArray: [],
                   driverId: null,
                   ridestatus: 0,
-                  assigned: "pending"
+                  assigned: 1
                 }, { new: true });
 
-                global.counter++
+                // global.counter++
+                var counter=await createrideModel.aggregate(
+                  [
+                    {
+                      $group: {
+                        _id: null,
+                        count: {
+                          $sum: "$assigned",
+                        },
+                      },
+                    },
+                  ]
+                )
 
                 global.io.emit("cronUpdateData2C", {
                     success: true,
                     message: "timeoutdata",
                     driverdata,
                     ridedata,
-                    counter
+                    counter:counter[0].count
                   });
 
                   console.log("CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC")

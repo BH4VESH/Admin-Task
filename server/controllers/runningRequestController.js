@@ -211,21 +211,35 @@ exports.acceptRide = async (req, res) => {
   const rideId = req.body.rideId;
 
   try {
-    const ride = await createrideModel.findByIdAndUpdate(rideId, { driverId: driverId, ridestatus: 4 }, { new: true })
+    const ride = await createrideModel.findByIdAndUpdate(rideId, { driverId: driverId, ridestatus: 4 ,assigned:0}, { new: true })
 
-    var counter2 = global.counter
-    if (counter2 <= 0) {
-      counter2 = 0
-    } else {
-      global.counter--
-      counter2 = global.counter
-    }
+    // const driver = await driverModel.findByIdAndUpdate(driverId, { $set: { assign: "1" } }, { new: true });
 
+    var counter = await createrideModel.aggregate(
+      [
+        {
+          $group: {
+            _id: null,
+            count: {
+              $sum: "$assigned",
+            },
+          },
+        },
+      ]
+    )
+    // var counter2 = counter[0].count
+    // if (counter2 <= 0) {
+    //   counter2 = 0
+    // } else {
+    //   // global.counter--
+    //   counter2 = counter[0].count
+    // }
+              
     // ride.counter = counter2;
 
     await sms('ride accepted')
-    global.io.emit('rideupdates', { ride, counter2 });
-    res.json({ success: true, ride, counter2 });
+    global.io.emit('rideupdates', { ride, counter2:counter[0].count });
+    res.json({ success: true, ride, counter2:counter[0].count });
 
   } catch (error) {
     console.log(error);
@@ -237,9 +251,21 @@ exports.arriveRide = async (req, res) => {
   try {
     const ride = await createrideModel.findByIdAndUpdate(rideId, { ridestatus: 5 }, { new: true })
 
-    var counter2 = global.counter
-    global.io.emit('rideupdates', { ride, counter2 });
-    res.json({ success: true, ride, counter2 });
+    // var counter2 = global.counter
+    var counter=await createrideModel.aggregate(
+      [
+        {
+          $group: {
+            _id: null,
+            count: {
+              $sum: "$assigned",
+            },
+          },
+        },
+      ]
+    )
+    global.io.emit('rideupdates', { ride, counter2:counter[0].count });
+    res.json({ success: true, ride, counter2:counter[0].count });
   } catch (error) {
     console.log(error);
   }
@@ -249,9 +275,21 @@ exports.pickRide = async (req, res) => {
   try {
     const ride = await createrideModel.findByIdAndUpdate(rideId, { ridestatus: 9 }, { new: true })
 
-    var counter2 = global.counter
-    global.io.emit('rideupdates', { ride, counter2 });
-    res.json({ success: true, ride, counter2 });
+    // var counter2 = global.counter
+    var counter=await createrideModel.aggregate(
+      [
+        {
+          $group: {
+            _id: null,
+            count: {
+              $sum: "$assigned",
+            },
+          },
+        },
+      ]
+    )
+    global.io.emit('rideupdates', { ride, counter2:counter[0].count });
+    res.json({ success: true, ride, counter2:counter[0].count });
   } catch (error) {
     console.log(error);
   }
@@ -261,10 +299,22 @@ exports.startRide = async (req, res) => {
   try {
     const ride = await createrideModel.findByIdAndUpdate(rideId, { ridestatus: 6 }, { new: true })
 
-    var counter2 = global.counter
+    // var counter2 = global.counter
+    var counter=await createrideModel.aggregate(
+      [
+        {
+          $group: {
+            _id: null,
+            count: {
+              $sum: "$assigned",
+            },
+          },
+        },
+      ]
+    )
     await sms('ride stared')
-    global.io.emit('rideupdates', { ride, counter2 });
-    res.json({ success: true, ride, counter2 });
+    global.io.emit('rideupdates', { ride, counter2:counter[0].count });
+    res.json({ success: true, ride, counter2:counter[0].count });
   } catch (error) {
     console.log(error);
   }
@@ -288,10 +338,22 @@ exports.completeRide = async (req, res) => {
     console.log("CCCCCC", driver)
     console.log("DDDDDD", auth_redirectUrl)
 
-    var counter2 = global.counter
+    // var counter2 = global.counter
+    var counter=await createrideModel.aggregate(
+      [
+        {
+          $group: {
+            _id: null,
+            count: {
+              $sum: "$assigned",
+            },
+          },
+        },
+      ]
+    )
     await sms('ride completed')
-    global.io.emit("rideupdates", { success, ride, driver, counter2, message, auth_redirectUrl });
-    res.json({ success: true, ride, driver, message, counter2, auth_redirectUrl });
+    global.io.emit("rideupdates", { success, ride, driver, counter2:counter[0].count, message, auth_redirectUrl });
+    res.json({ success: true, ride, driver, message, counter2:counter[0].count, auth_redirectUrl });
 
   } catch (error) {
     console.log(error);
@@ -304,8 +366,20 @@ exports.freerideanddriver = async (req, res) => {
   try {
     const driver = await driverModel.findByIdAndUpdate(driverId, { $set: { assign: "0" } }, { new: true });
     const ride = await createrideModel.findByIdAndUpdate(rideId, { $unset: { driverId: "", assigningTime: "" } }, { new: true })
-    var counter2 = global.counter
-    global.io.emit('rideupdates', { ride, driver, counter2 });
+    // var counter2 = global.counter
+    var counter=await createrideModel.aggregate(
+      [
+        {
+          $group: {
+            _id: null,
+            count: {
+              $sum: "$assigned",
+            },
+          },
+        },
+      ]
+    )
+    global.io.emit('rideupdates', { ride, driver, counter2:counter[0].count });
     res.json({ success: true, ride, driver });
   } catch (error) {
     console.log(error);

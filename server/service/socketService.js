@@ -15,9 +15,28 @@ async function initializeSocket(server) {
 
     // notification counter
     socket.on("counterSend",async ()=>{
+      var counter = await createrideModel.aggregate(
+        [
+          {
+            $group: {
+              _id: null,
+              count: {
+                $sum: "$assigned",
+              },
+            },
+          },
+        ]
+      )
+      var counterNew = counter[0].count
+      if (counterNew <= 0) {
+        counterNew = 0
+      } else {
+        // global.counter--
+        counterNew = counter[0].count
+      }
       io.emit("counterGet", {
         success: true,
-        counter
+        counter:counterNew
       });
     })
 

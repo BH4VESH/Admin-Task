@@ -143,18 +143,18 @@ exports.searchRides = async (req, res) => {
     
         const matchStage = {};
         if (search) {
-          var searchObjectId;
+          // var searchObjectId;
     
-          if (search.length == 24) {
-            searchObjectId = new mongoose.Types.ObjectId(search);
-          }
+          // if (search.length == 24) {
+          //   searchObjectId = new mongoose.Types.ObjectId(search);
+          // }
     
           matchStage.$or = [
             { "user.username": { $regex: new RegExp(search, "i") } },
             { "user.phone": { $regex: new RegExp(search, "i") } },
             { "fromLocation": { $regex: new RegExp(search, "i") } },
             { "toLocation": { $regex: new RegExp(search, "i") } },
-            { _id: searchObjectId },
+            { "uniqueId": { $regex: new RegExp(search, "i") } },
           ];
           
         }

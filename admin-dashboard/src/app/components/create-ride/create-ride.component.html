@@ -1,6 +1,6 @@
-<div class="container-fluid">
+<div class="container-fluid content">
     <div class="row mt-5">
-        <div class="col-xl-4 col-lg-4 col-xxl-4 col-md-4 col-sm-12  d-flex justify-content-center">
+        <div class="col-xl-6 col-lg-6 col-xxl-6 col-md-6 col-sm-12  d-flex justify-content-center">
             <div class="row mt-3 mb-3 ">
                 <form [formGroup]="userPhoneInput" *ngIf="next">
                     <!-- User Phone with Country Code -->
@@ -61,7 +61,7 @@
 
                 <div [ngClass]="{ 'd-none': !fromTo}">
                     <form [formGroup]="fromToInput">
-                        <div class="form-group">
+                        <div class="form-group mt-3">
                             <div class="input-group">
                                 <span class="input-group-text" id="basic-addon1">From</span>
                                 <input id="from-input" placeholder="Enter From location" class="form-control  controls"
@@ -107,11 +107,12 @@
 
             </div>
         </div>
-        <div class="col-xl-8 col-lg-8 col-xxl-8 col-md-8 col-sm-12 ">
+        <div class="col-xl-6 col-lg-6 col-xxl-6 col-md-6 col-sm-12 ">
             <div #mapContainer style="width: 100%; height: 50vh;"></div>
 
         </div>
     </div>
+    <hr>
     <!-- bellow part -->
     <!-- left side -->
     <div class="row d-flex mt-4" [ngClass]="{ 'd-none': !fromTo}">
@@ -145,10 +146,10 @@
         </div>
 
         <!-- right side -->
-        <div class="col-xl-6 col-lg-6 col-xxl-6 col-md-6 col-sm-12  text-center">
+        <div class="col-xl-6 col-lg-6 col-xxl-6 col-md-6 col-sm-12  text-center  ">
             <!-- select service -->
             <div class="col-lg-8 col-md-8 col-auto">
-                <div class="form-floating mb-3">
+                <div class="form-floating mb-3 mt-3 pe-3 ps-3">
                     <select class="form-select" id="inputGroupid" (change)="onChangeService($event)">
                         <option value="" selected>click here to select</option>
                         <ng-container *ngFor="let priceData of priceData">
@@ -165,46 +166,51 @@
             </div>
             <hr>
             <!-- payment option -->
-            <div class="col-md">
+            <div class="col-md d-flex gap-2 pe-3 ps-3">
                 <span>
-                    <p><b>select payment option</b></p>
+                    <p><b>select payment option : </b></p>
                 </span>
-                <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio1"
-                        value="Cash" [(ngModel)]="selectedPaymentOption" (change)="onPaymentOptionChange()">
-                    <label class="form-check-label" for="inlineRadio1">Cash</label>
+                <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                    <label class="btn btn-secondary active">
+                        <input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio1" value="Cash"
+                            [(ngModel)]="selectedPaymentOption" (change)="onPaymentOptionChange()"> Cash
+                    </label>
+                    <label class="btn btn-secondary">
+                        <input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio2" value="Card"
+                            [(ngModel)]="selectedPaymentOption" (change)="onPaymentOptionChange()"> Card
+                    </label>
+            
                 </div>
-                <div class="form-check form-check-inline" *ngIf="ifCardAdded">
-                    <input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio2"
-                        value="Card" [(ngModel)]="selectedPaymentOption" (change)="onPaymentOptionChange()">
-                    <label class="form-check-label" for="inlineRadio2">Card</label>
-                </div>
-                <div class="error">
-                    <div *ngIf="showPaymentError" class="text-danger">
-                        Please select payment first..
-                    </div>
+            
+            </div>
+            <div class="error">
+                <div *ngIf="showPaymentError" class="text-danger">
+                    Please select payment first..
                 </div>
             </div>
             <hr>
             <!-- book ride/schedule/conformRide -->
-            <div class="col-md">
+            <div class="col-md d-flex gap-2 pe-3 ps-3">
                 <span>
-                    <p><b>select Booking option</b></p>
+                    <p><b>select Booking option : </b></p>
                 </span>
-                <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="bookingRadioOptions" id="bookingRadio1"
-                        value="BookNow" [(ngModel)]="selectedBookingOption" (change)="onBookingOptionChange()">
-                    <label class="form-check-label" for="bookingRadio1">Book Now</label>
+                <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                    <label class="btn btn-secondary active">
+                        <input class="form-check-input" type="radio" name="bookingRadioOptions" id="bookingRadio1" value="BookNow"
+                            [(ngModel)]="selectedBookingOption" (change)="onBookingOptionChange()">Book Now
+                    </label>
+                    <label class="btn btn-secondary">
+                        <input class="form-check-input" type="radio" name="bookingRadioOptions" id="bookingRadio2" value="Schedule"
+                            [(ngModel)]="selectedBookingOption" (change)="onBookingOptionChange()"> Schedule
+                    </label>
+            
+            
                 </div>
-                <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="bookingRadioOptions" id="bookingRadio2"
-                        value="Schedule" [(ngModel)]="selectedBookingOption" (change)="onBookingOptionChange()">
-                    <label class="form-check-label" for="bookingRadio2">Schedule</label>
-                </div>
-                <div class="error">
-                    <div *ngIf="showBookingError" class="text-danger">
-                        Please select booking first..
-                    </div>
+            
+            </div>
+            <div class="error">
+                <div *ngIf="showBookingError" class="text-danger">
+                    Please select booking first..
                 </div>
             </div>
             <!-- for the schedule date and time -->
@@ -227,6 +233,7 @@
                 </div>
             </div>
             
+            <hr>
             <!-- confirm Ride -->
             <div class="d-grid col-6 mx-auto mt-2">
                 <button class="btn btn-primary" (click)="ConfirmRide()" type="button">Confirm Ride</button>

@@ -373,21 +373,21 @@ exports.updateDriver = async (req, res) => {
 
      // Update the Stripe connected account if necessary
 
-     if (updatedDriver.stripeDriverId && username) {
-      const accountUpdates = {
-        email: updatedDriver.email,
-        business_profile: {
-          name: updatedDriver.username,
-        },
-        individual: {
-          first_name: updatedDriver.username,
-          last_name: updatedDriver.username,
-          email: updatedDriver.email,
-        },
-      }
+    //  if (updatedDriver.stripeDriverId && username) {
+    //   const accountUpdates = {
+    //     email: updatedDriver.email,
+    //     business_profile: {
+    //       name: updatedDriver.username,
+    //     },
+    //     individual: {
+    //       first_name: updatedDriver.username,
+    //       last_name: updatedDriver.username,
+    //       email: updatedDriver.email,
+    //     },
+    //   }
 
-      await stripe.accounts.update(updatedDriver.stripeDriverId, accountUpdates);
-    }
+    //   await stripe.accounts.update(updatedDriver.stripeDriverId, accountUpdates);
+    // }
 
     const Drivers = await Driver.aggregate([
       {
@@ -611,30 +611,30 @@ exports.addService = async (req, res) => {
 // add status------------------it is update using socket in the socket file
 exports.addStatus = async (req, res) => {
   const driverId = req.params.id;
-
+// console.log(req.params.id)
   try {
     const toggle = await Driver.findById(driverId);
-
+// console.log(toggle)
     if (!toggle) {
       const newToggle = new Driver({ driverId, status: true });
       await newToggle.save();
-      // return res.json({ message: 'Status set to true', status: true });
       global.io.emit("statusdata", {
         success: true,
-        status: toggle.status,
-        message: "Driver Status Updated Successfully.",
-      });
+        status: true,
+        message: "'Status set to true.",
+        });
+      return res.json({ message: 'Status set to true', status: true });
     } else {
       toggle.status = !toggle.status;
       await toggle.save();
       const message = toggle.status ? 'Status set to true' : 'Status set to false';
-      // return res.json({ message, status: toggle.status });
       global.io.emit("statusdata", {
-                  success: true,
-                  status: toggle.status,
-                  message: "Driver Status Updated Successfully.",
-                });
-    }
+        success: true,
+        status: toggle.status,
+        message: message,
+        });
+      return res.json({ message, status: toggle.status });
+        }
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: 'Server error' });
