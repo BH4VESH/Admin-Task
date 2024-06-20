@@ -27,12 +27,17 @@ async function initializeSocket(server) {
           },
         ]
       )
-      var counterNew = counter[0].count
+      console.log(counter)
+      if(counter.length > 0){
+        var counterNew = counter[0].count
+      }
       if (counterNew <= 0) {
         counterNew = 0
       } else {
         // global.counter--
-        counterNew = counter[0].count
+        if(counter.length > 0){
+          counterNew = counter[0].count
+        }
       }
       io.emit("counterGet", {
         success: true,

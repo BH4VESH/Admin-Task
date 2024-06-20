@@ -30,6 +30,9 @@ const initializeSocket = require("./service/socketService")
 
 const port = process.env.port;
 
+// mongoose.connect(process.env.mongo_path)
+//   .then(() => console.log('MongoDB Connected'))
+//   .catch(err => console.log(err));
 mongoose.connect(process.env.mongo_path)
   .then(() => console.log('MongoDB Connected'))
   .catch(err => console.log(err));
