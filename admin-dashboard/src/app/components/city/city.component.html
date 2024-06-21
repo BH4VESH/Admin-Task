@@ -18,8 +18,8 @@
       </button>
     </div>
     <div class="col d-grid gap-2 d-md-flex justify-content-md-end">
-      <button (click)="saveZone()" class="btn btn-outline-success">Save Zone</button>
-      <button (click)="updateZone()" class="btn btn-outline-info">Update Zone</button>
+      <button (click)="saveZone()" class="btn btn-outline-success" [disabled]="isDissSavebtn">Save Zone</button>
+      <button (click)="updateZone()" [disabled]="isDissUpdatebtn" class="btn btn-info">Update Zone</button>
     </div>
   </div>
 </div>

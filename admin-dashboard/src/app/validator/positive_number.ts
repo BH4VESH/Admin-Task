@@ -6,7 +6,7 @@ export function positiveNumberValidator(): ValidatorFn {
     if (value === null || value === undefined || value === '') {
       return null; // Allow empty value
     }
-    const isPositive = /^[1-9]\d*$/.test(value);
+    const isPositive = /^\d*\.?\d+$/.test(value); // Allow positive decimal numbers
     return isPositive ? null : { 'positiveNumber': true };
   };
 }

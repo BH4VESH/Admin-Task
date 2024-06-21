@@ -2,7 +2,21 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, Subject, catchError, tap, throwError } from 'rxjs';
-import {Driver, DriverServiceType, FatchDriver, UserSearchResponse} from '../models/driver';
+import {Driver, DriverServiceType, FatchDriver, UserSearchResponse, fetchCity} from '../models/driver';
+
+
+
+interface BankAccountData {
+  accountHolderName: string;
+  routingNumber: string;
+  accountNumber: string;
+}
+
+interface BankAccountResponse {
+  success: boolean;
+  message: string;
+  bankAccount?: any;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -85,6 +99,15 @@ export class DriverListService {
       })
     );
   }
+  fatchCity(countryId: string): Observable<fetchCity> {
+    const url = `${this.baseUrl}/fatchCity/`;
+    const body = { countryId }; 
+    return this.http.post<fetchCity>(url,body);
+  }
+
+  addBankAccount(driverId: string, bankAccountData: BankAccountData): Observable<BankAccountResponse> {
+    const url = `${this.baseUrl}/addBankAccount/`;
+    return this.http.post<BankAccountResponse>(url, {driverId,bankAccountData})}
 
 
 }

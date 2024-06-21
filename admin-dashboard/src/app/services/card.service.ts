@@ -11,8 +11,8 @@ export class CardService {
 
   constructor(private http: HttpClient) { }
 
-  addCard(CostomerId: any, token: any): Observable<AddCardResponse> {
-    const payload = { CostomerId, token };
+  addCard(CostomerId: any, token: any,paymentMethodId:any): Observable<AddCardResponse> {
+    const payload = { CostomerId, token,paymentMethodId };
     return this.http.post<AddCardResponse>(`${this.baseUrl}/add-card`, payload);
   }
   getCustomerCards(customerId: string): Observable<CustomerCardsResponse> {

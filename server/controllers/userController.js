@@ -2,7 +2,7 @@ const User = require('../models/userModel');
 const deleteImage = require('../middleware/deleteImage');
 const country = require('../models/countryModel');
 const dotenv=require('dotenv').config();
-const stripe = require('stripe')(process.env.stripeSecretKey);
+const stripe = require('stripe')(process.env.STRIPE_SK);
 
 exports.createUser = async (req, res) => {
   try {
@@ -194,7 +194,7 @@ exports.getShortUser = async (req, res) => {
 };
 // /////////////////////////////////delete
 exports.deleteUser = async (req, res) => {
-  const id = req.params.id;
+  const id = req.params.id; 
 
   try {
     const deletedUser = await User.findByIdAndDelete(id);
@@ -227,23 +227,6 @@ exports.updateUser = async (req, res) => {
 
     if (req.file) {
       updatedFields.profilePic = req.file.filename;
-    }
-
-    const existingUser = await User.findOne({
-      $or: [
-        { email: updatedFields.email },
-        { phone: updatedFields.phone }
-      ]
-    });
-
-    if (existingUser && existingUser._id.toString() !== userId) {
-      let errorMessage = '';
-      if (existingUser.email === updatedFields.email) {
-        errorMessage = 'Email is already in use. Please choose a different one.';
-      } else if (existingUser.phone === updatedFields.phone) {
-        errorMessage = 'Phone number is already in use. Please choose a different one.';
-      }
-      return res.json({ success: false, message: errorMessage });
     }
 
     const oldUser = await User.findById(userId);
@@ -291,10 +274,24 @@ exports.updateUser = async (req, res) => {
     if (!updatedUser) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
+
+    await stripe.customers.update(updatedUser.stripeCustomerId, {
+      email: updatedUser.email,
+    });
+    
     res.json({ success: true, message: 'User updated successfully', user: user[0] });
   } catch (error) {
-    console.error('Error updating user:', error);
-    res.status(500).json({ success: false, message: 'Internal server error' });
+      if (error.code === 11000 && error.keyPattern && error.keyValue) {
+        let errorMessage;
+        if (error.keyPattern.phone) {
+          errorMessage = `Phone number is already registered.`;
+        } else if (error.keyPattern.email) {
+          errorMessage = `Email is already registered.`;
+        }
+        res.status(500).json({ success: false, message: errorMessage });
+      } else {
+        console.error(error)
+      }
   }
 };
 
@@ -365,12 +362,30 @@ exports.searchUsers = async (req, res) => {
 
 exports.addCard = async (req, res) => {
   try {
-    const { CostomerId, token } = req.body;
-
-
+    const { CostomerId, token ,paymentMethodId} = req.body;
+  // console.log("ADD CARD API------------- 4000000000000077",token);
+//     const addFund = await stripe.charges.create({
+//       amount:99999999,
+//       currency: 'usd',
+//       source: token,
+//       description: 'Charge for adding funds to Stripe balance',
+//     });
+// console.log('addFund',addFund)
     const cardData = await stripe.customers.createSource(CostomerId, {
       source: token
     });
+
+      // Attach the payment method to the customer
+      // const paymentMethod = await stripe.paymentMethods.attach(paymentMethodId, {
+      //   customer: CostomerId,
+      // });
+  
+      // // Update the customer to set the default payment method
+      // await stripe.customers.update(CostomerId, {
+      //   invoice_settings: {
+      //     default_payment_method: paymentMethodId,
+      //   },
+      // });
 
     res.status(200).json({ success: true, message: 'Card added successfully', cardData });
   } catch (error) {

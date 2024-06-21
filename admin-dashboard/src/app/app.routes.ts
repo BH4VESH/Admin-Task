@@ -12,9 +12,10 @@ import { UserComponent } from './components/user/user.component';
 import { DriverListComponent } from './components/driver-list/driver-list.component';
 import { AdminComponent } from './components/admin/admin.component';
 import { PagenotfoundComponent } from './components/pagenotfound/pagenotfound.component';
-
-
-
+import { CreateRideComponent } from './components/create-ride/create-ride.component';
+import { ConfirmedRidesComponent } from './components/confirmed-rides/confirmed-rides.component';
+import { RunningRequestComponent } from './components/running-request/running-request.component';
+import { RideHistoryComponent } from './components/ride-history/ride-history.component';
 
 
 export const routes: Routes = [
@@ -33,7 +34,11 @@ export const routes: Routes = [
           { path: 'vehicle_pricing', component: VehiclePricingComponent },
           { path: 'settings', component: SettingsComponent },
           { path: 'user', component: UserComponent },
-          { path: 'driver-list', component: DriverListComponent }
+          { path: 'driver-list', component: DriverListComponent },
+          { path: 'create_ride', component:CreateRideComponent },
+          {path: 'confirmed_rides', component:ConfirmedRidesComponent},
+          {path: 'running_request', component:RunningRequestComponent},
+          {path: 'ride_history', component:RideHistoryComponent}
         ]
       },
       {path:'**',component:PagenotfoundComponent,title:'page not found'}

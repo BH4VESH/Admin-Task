@@ -1,5 +1,10 @@
 const Driver = require('../models/driverListModel');
+const zones=require('../models/cityModel')
 const deleteImage = require('../middleware/deleteImage');
+const { default: mongoose } = require('mongoose');
+require('dotenv').config();
+const stripe = require('stripe')(process.env.STRIPE_SK);
+
 exports.createDriver = async (req, res) => {
   try {
 
@@ -34,6 +39,64 @@ exports.createDriver = async (req, res) => {
     });
 
     const addedDriver = await newDriver.save();
+
+    // create bank acc
+    const accountData = {
+      type: 'custom', // or 'express'
+      country: 'US',
+      email: email,
+      business_profile: {
+          name: username,
+          url: 'www.bhavesh.com', // Replace with actual URL
+          mcc: '5734', // Merchant Category Code
+          support_phone: '+12025550123', // Support phone number
+          support_email: 'support@example.com', // Support email
+          support_url: 'www.example.com/support', // Support URL
+      },
+      business_type: 'individual', // or 'company'
+      individual: {
+          first_name: username,
+          last_name: username,
+          email: email,
+          phone: '+12025550123',
+          dob: {
+              day: 12,
+              month: 12,
+              year: 1995
+          },
+          address: {
+              city: 'LA',
+              country: 'US',
+              line1: 'LA',
+              line2: 'LA',
+              postal_code: '95014',
+              state: 'WA'
+          },
+          ssn_last_4: '0000',
+          id_number: '000000000', // You should never hardcode sensitive information like this. Use secure methods to handle it.
+      },
+      capabilities: {
+          card_payments: { requested: true },
+          transfers: { requested: true }
+      },
+      metadata: {
+          customerType: 'Driver'
+      },
+      tos_acceptance: {
+          date: Math.floor(Date.now() / 1000),
+          ip: '8.8.8.8',
+      },
+    };
+    
+    const account = await stripe.accounts.create(accountData);
+
+   
+
+    console.log(account)
+    addedDriver.stripeDriverId = account.id;
+    await addedDriver.save();
+
+
     const savedDriver = await Driver.aggregate(
       [
         {
@@ -74,6 +137,50 @@ exports.createDriver = async (req, res) => {
     console.log(savedDriver[0])
     res.status(201).json({ success: true, message: "Driver Added Successfully", Driver: savedDriver[0] });
   } catch (err) {
+    console.log(err)
+    res.status(400).json({ success: false, message: err.message });
+  }
+};
+
+// ///////////////////add bank account
+
+exports.addBankAccount = async (req, res) => {
+  try {
+    const driverId=req.body.driverId
+    const bankAccountData=req.body.bankAccountData
+
+    // const { driverId, accountHolderName, routingNumber, accountNumber } = req.body;
+
+    // Retrieve the driver from the database
+    const driver = await Driver.findById(driverId);
+
+    if (!driver) {
+      return res.status(404).json({ success: false, message: 'Driver not found' });
+    }
+
+    // Retrieve the Stripe account associated with the driver
+    // const stripeAccount = await stripe.accounts.retrieve(driver.stripeDriverId);
+    const externalAccount = await stripe.accounts.createExternalAccount(
+      // stripeAccount.id,
+      driver.stripeDriverId,
+      {
+        external_account: {
+          object: 'bank_account',
+          country: 'US',
+          currency: 'usd',
+          account_holder_name: bankAccountData.accountHolderName,
+          account_holder_type: 'individual',
+          routing_number: bankAccountData.routingNumber,
+          account_number: bankAccountData.accountNumber,
+        }
+      }
+    );
+
+    res.status(200).json({ success: true, message: 'Bank account added successfully', driverId,bankAccountData});
+    // res.status(200).json({ success: true, message: 'Bank account added successfully', bankAccount: externalAccount });
+
+  } catch (err) {
+    console.error(err);
     res.status(400).json({ success: false, message: err.message });
   }
 };
@@ -199,9 +306,15 @@ exports.deleteDriver = async (req, res) => {
   const id = req.params.id;
 
   try {
+    const driver = await Driver.findById(id);
     const deletedUser = await Driver.findByIdAndDelete(id);
     if (!deletedUser) {
       return res.status(404).json({ success: false, message: 'Driver not found' });
+    }
+
+     // Delete the Stripe connected account
+     if (driver.stripeDriverId) {
+      await stripe.accounts.del(driver.stripeDriverId);
     }
 
     const imagePath = `../public/uploads/driver_list_profile/${deletedUser.profilePic}`;
@@ -257,6 +370,24 @@ exports.updateDriver = async (req, res) => {
     }
 
     const updatedDriver = await Driver.findByIdAndUpdate(DriverId, updatedFields, { new: true });
+
+     // Update the Stripe connected account if necessary
+
+    //  if (updatedDriver.stripeDriverId && username) {
+    //   const accountUpdates = {
+    //     email: updatedDriver.email,
+    //     business_profile: {
+    //       name: updatedDriver.username,
+    //     },
+    //     individual: {
+    //       first_name: updatedDriver.username,
+    //       last_name: updatedDriver.username,
+    //       email: updatedDriver.email,
+    //     },
+    //   }
+
+    //   await stripe.accounts.update(updatedDriver.stripeDriverId, accountUpdates);
+    // }
 
     const Drivers = await Driver.aggregate([
       {
@@ -327,23 +458,35 @@ exports.searchDriver = async (req, res) => {
       {
         $lookup: {
           from: "zones",
-          localField: "cityId",
-          foreignField: "_id",
+          let: { cityId: "$cityId" },
+          pipeline: [
+            {
+              $match: {
+                $expr: { $eq: ["$_id", "$$cityId"] }
+              }
+            }
+          ],
           as: "city"
         }
       },
       {
         $lookup: {
           from: "countries",
-          localField: "countryId",
-          foreignField: "_id",
-          as: "country"
+          let: { countryId: "$countryId" },
+          pipeline: [
+            {
+              $match: {
+                $expr: { $eq: ["$_id", "$$countryId"] } 
+              }
+            }
+          ],
+          as: "country" 
         }
       },
       {
         $addFields: {
-          cityName: { "$arrayElemAt": ["$city.name", 0] },
-          countryCode: { "$arrayElemAt": ["$country.country_calling_code", 0] }
+          cityName: { $arrayElemAt: ["$city.name", 0] },
+          countryCode: { $arrayElemAt: ["$country.country_calling_code", 0] }
         }
       },
       {
@@ -367,13 +510,16 @@ exports.searchDriver = async (req, res) => {
         { phone: { $regex: query, $options: 'i' } }
       ]
     });
-
+    
+console.log(Drivers)
     res.json({ success: true, Drivers, totalCount });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
-// add service
+
+// add service ------------------it is update using socket in the socket file
+
 exports.addService = async (req, res) => {
   const driverId = req.params.id;
   const serviceId = req.body.serviceId;
@@ -409,7 +555,12 @@ exports.addService = async (req, res) => {
           }
         ]
       )
-      res.json({ success: true, message: 'Service Set Successfull', service: service[0] });
+      // res.json({ success: true, message: 'Service Set Successfull', service: service[0] });
+      io.emit("servicedata", {
+        success: true,
+        message: 'Service Set Successfull',
+         service: service[0]
+      });
     }
     else {
 
@@ -442,34 +593,76 @@ exports.addService = async (req, res) => {
           }
         ]
       )
-      res.json({ success: true, message: 'Service Added Successfull', service: service[0] });
+      // res.json({ success: true, message: 'Service Added Successfull', service: service[0] });
+      io.emit("servicedata", {
+        success: true,
+        message: 'Service Added Successfull',
+         service: service[0]
+      });
     }
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
   }
 }
-// add status
+
+
+
+// add status------------------it is update using socket in the socket file
 exports.addStatus = async (req, res) => {
   const driverId = req.params.id;
-
+// console.log(req.params.id)
   try {
     const toggle = await Driver.findById(driverId);
-
+// console.log(toggle)
     if (!toggle) {
       const newToggle = new Driver({ driverId, status: true });
       await newToggle.save();
+      global.io.emit("statusdata", {
+        success: true,
+        status: true,
+        message: "'Status set to true.",
+        });
       return res.json({ message: 'Status set to true', status: true });
     } else {
       toggle.status = !toggle.status;
       await toggle.save();
       const message = toggle.status ? 'Status set to true' : 'Status set to false';
+      global.io.emit("statusdata", {
+        success: true,
+        status: toggle.status,
+        message: message,
+        });
       return res.json({ message, status: toggle.status });
-    }
+        }
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: 'Server error' });
   }
 }
 
+// fatch city by relevent country id
+exports.fetchCity = async (req, res) => {
+  try {
+    const countryId = req.body.countryId;
 
+    const cities = await zones.aggregate([
+      {
+        $match: {
+          country_id: new mongoose.Types.ObjectId(countryId) 
+        }
+      },
+      {
+        $project: {
+          _id: 1,
+          name: 1
+        }
+      }
+    ]);
+
+    res.json({ success: true, message: 'Cities fetched successfully', cities: cities });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: 'Server error' });
+  }
+};

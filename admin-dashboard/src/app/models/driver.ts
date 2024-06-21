@@ -1,3 +1,5 @@
+import { Zone } from "./zone";
+
 export interface Driver {
     _id: string;
     countryId: string;
@@ -34,4 +36,12 @@ export interface DriverServiceType {
       };
     message?:string;
     success: boolean;
+}
+export interface fetchCity{
+   _id:string;
+    name:string;
+    cities:Zone[];
+    message:string;
+    success:boolean;
+
 }

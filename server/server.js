@@ -12,10 +12,27 @@ const vehicle_price_Routes=require('./routes/vehiclePriceRoutes')
 const userRoutes=require('./routes/userRoutes')
 const driver_listRoutes=require('./routes/driverListRoutes')
 const settingRoutes=require('./routes/settingRoutes')
+const createRideRoutes=require('./routes/createRideRoutes')
+const confirmedRideRoutes=require('./routes/confirmedRideRoutes')
+const runningRequestRoutes=require('./routes/runningRequestRoutes')
+const ridedHistoryRoutes=require('./routes/ridedHistoryRoutes')
+// const socketService = require('./service/socketService');
+const initializeCronJob = require('./service/cron');
 const dotenv=require("dotenv").config();
 const app = express();
+
+global.counter=0
+
+// create socket 
+const http = require('http').Server(app);
+const initializeSocket = require("./service/socketService")
+// const server = http.Server(app);
+
 const port = process.env.port;
 
+// mongoose.connect(process.env.mongo_path)
+//   .then(() => console.log('MongoDB Connected'))
+//   .catch(err => console.log(err));
 mongoose.connect(process.env.mongo_path)
   .then(() => console.log('MongoDB Connected'))
   .catch(err => console.log(err));
@@ -23,7 +40,7 @@ mongoose.connect(process.env.mongo_path)
 app.use(cors());
 app.use(bodyParser.json());
 
-const JWT_SECRET = 'secret_key'; 
+// const JWT_SECRET = 'secret_key'; 
 
 app.post('/login', async (req, res) => {
   const { username, password } = req.body;
@@ -35,8 +52,8 @@ app.post('/login', async (req, res) => {
     return res.status(401).send('Invalid password');
   }
   if (user) {
-    const token = jwt.sign({ userId: user._id }, JWT_SECRET);
-    // const token = jwt.sign({ userId: user._id }, JWT_SECRET, { expiresIn: '20m' });
+    // const token = jwt.sign({ userId: user._id }, JWT_SECRET);
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '2000m' });
     res.json({ token });
   } 
 });
@@ -44,7 +61,7 @@ app.post('/login', async (req, res) => {
 function checkAuth(req, res, next) {
   const token = req.headers['authorization']; 
   if (token) {
-    jwt.verify(token, JWT_SECRET, (err, decoded) => {
+    jwt.verify(token,process.env.JWT_SECRET, (err, decoded) => {
       if (err) {
         return res.status(401).send('Unauthorized');
       } else {
@@ -52,7 +69,7 @@ function checkAuth(req, res, next) {
         next();
       }
     });
-  } else {
+  } else {  
     res.status(401).send('Unauthorized');
   }
 }
@@ -63,9 +80,20 @@ app.use('/countrys',checkAuth, countryRoutes);
 app.use('/city',checkAuth, cityRoutes);
 app.use('/vehicle/price',checkAuth, vehicle_price_Routes);
 app.use('/users',checkAuth, userRoutes);
-app.use('/driverlist',checkAuth, driver_listRoutes);
-app.use('/setting',settingRoutes);
+app.use('/driverlist',checkAuth,driver_listRoutes);
+app.use('/setting',checkAuth,settingRoutes);
+// task-4 start
+app.use('/createride',checkAuth,createRideRoutes);
+app.use('/confirmedride',checkAuth,confirmedRideRoutes);
+app.use('/runningride',checkAuth,runningRequestRoutes);
+app.use('/ridehistory',checkAuth,ridedHistoryRoutes);
 
-app.listen(port, () => {
+
+
+// for the socket connection
+initializeSocket(http)
+  initializeCronJob();
+
+http.listen(port, () => {
   console.log(`Server is running at http://localhost:${port}`);
 });

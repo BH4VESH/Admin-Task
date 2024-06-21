@@ -32,12 +32,16 @@ export class CityComponent implements OnInit {
   from!: string | undefined;
 
   countries: Country[] = [];
-  selected_country!: Country[]|any;//////////////////////////////////
+  selected_country!: Country[]|any;
   selected_city!: string|undefined|null;
   zones: Zone[] = [];
   selectedCountryReset!:null
-  polygone_coordinet!: google.maps.LatLng[]
+  // polygone_coordinet!: google.maps.LatLng[]
+  polygone_coordinet!:{ type: string; coordinates: number[][][]; };
+  
   geocoder: google.maps.Geocoder;
+  isDissUpdatebtn:boolean=true
+  isDissSavebtn:boolean=false
   // country_table_data: Country[];
 
   constructor(
@@ -61,6 +65,7 @@ export class CityComponent implements OnInit {
     this.initMap();
     this.getAllZone()
     // this.initAutocomplete();
+    
   }
 
   onCountrySelection(event:any) {
@@ -76,19 +81,7 @@ export class CityComponent implements OnInit {
     // this.setCountry(this.selected_country.code);
     this.initAutocomplete();
   }
-  getCountryCoordinates(countryName: string): void {
-    this.geocoder.geocode({ address: countryName }, (results, status) => {
-      if (status === google.maps.GeocoderStatus.OK && results && results.length > 0) {
-        const location = results[0].geometry.location;
-        console.log('country Coordinates:', location.lat(), location.lng());
-        const mapCenter = { lat: location.lat(), lng: location.lng() };
-        this.map.setCenter(mapCenter);
-        this.map.setZoom(8);
-      } else {
-        console.error('Failed to retrieve coordinates for the selected country.');
-      }
-    });
-  }
+
   // //////////////////////////////////////////////map load /////////////
   initMap(): void {
     const mapOptions: google.maps.MapOptions = {
@@ -120,14 +113,21 @@ export class CityComponent implements OnInit {
       if (event.type === google.maps.drawing.OverlayType.POLYGON) {
         this.currentPolygon = event.overlay;
         const coordinates: google.maps.LatLng[] = this.currentPolygon!.getPath().getArray();
-        this.polygone_coordinet = coordinates
+        // this.polygone_coordinet = coordinates
+        const closedLoopCoordinates = [...coordinates.map(latLng => [latLng.lng(), latLng.lat()]), [coordinates[0].lng(), coordinates[0].lat()]];
+        this.polygone_coordinet = {
+          type: 'Polygon',
+          coordinates: [closedLoopCoordinates]
+        };
       }
     });
   }
   // ////////////////////////////////auto complete city /////////////////
   initAutocomplete(): void {
     const searchCity: HTMLInputElement = document.getElementById('searchCity') as HTMLInputElement;
-
+    this.isDissSavebtn=false
+    this.isDissUpdatebtn=true
+    this.initMap()
 
     const options: google.maps.places.AutocompleteOptions = {
       types: ['(cities)'],
@@ -138,7 +138,7 @@ export class CityComponent implements OnInit {
 
     this.searchAutocomplete?.addListener('place_changed', () => {
       const city = this.searchAutocomplete!.getPlace();
-      if (!city || !city.geometry || !city.geometry.location) {
+      if (!city.geometry || !city.geometry.location) {
         this.toastr.error('Please select a valid city.');
         return;
       }
@@ -166,50 +166,96 @@ export class CityComponent implements OnInit {
     this.selectedCountryReset = null;
   }
   /////////////////////////////////////////////////////////////////////////
+  // saveZone() {
+  //   if (!this.selected_city) {
+  //     this.toastr.error('Please select sity first.');
+  //     // this.resetAutocomplete()
+  //     return;
+  //   }
+  //   if (this.polygone_coordinet == null) {
+  //     this.toastr.error('Please draw a polygon first.');
+  //     // this.resetAutocomplete()
+  //     return;
+  //   }
+
+  //   // store in the database
+  //   let matchIndex = true;
+  //   for (let i = 0; i < this.zones.length; i++) {
+
+  //     if (this.selected_city === this.zones[i].name) {
+  //       matchIndex = false;
+  //       this.toastr.error("Duplicate city are not allowed")
+  //       // this.resetAutocomplete()
+  //       break;
+  //     } else {
+  //       matchIndex = true;
+  //     }
+  //   }
+  //   if (matchIndex === true) {
+  //     this.CityService.createZone({ name: this.selected_city, coordinates: this.polygone_coordinet, country_id: this.selected_country._id })
+  //       .subscribe(
+  //         response => {
+  //           this.zones.push(response)
+  //           // this.getAllZone()
+  //           console.log("thise is save btn zones:", this.zones)
+  //           console.log('Zone created successfully:', response);
+  //           this.toastr.success("city added successfull")
+  //           this.initMap()
+  //           this.resetAutocomplete()
+  //         },
+  //         error => {
+  //           console.error('Error creating zone:', error);
+  //           this.toastr.error('Failed to create zone. Please try again later.');
+  //         }
+  //       );
+  //     console.log("this is zones data : ", this.zones)
+  //   }
+  // }
+  //////////////////////////////////////////////////////////////////////
+
   saveZone() {
     if (!this.selected_city) {
-      this.toastr.error('Please select sity first.');
-      this.resetAutocomplete()
+      this.toastr.error('Please select a city first.');
       return;
     }
-    if (this.polygone_coordinet == null) {
+    if (!this.polygone_coordinet) {
       this.toastr.error('Please draw a polygon first.');
-      this.resetAutocomplete()
       return;
     }
 
-    // store in the database
     let matchIndex = true;
     for (let i = 0; i < this.zones.length; i++) {
-
       if (this.selected_city === this.zones[i].name) {
         matchIndex = false;
-        this.toastr.error("Duplicate city are not allowed")
-        this.resetAutocomplete()
+        this.toastr.error('Duplicate city are not allowed');
         break;
       } else {
         matchIndex = true;
       }
     }
+
     if (matchIndex === true) {
-      this.CityService.createZone({ name: this.selected_city, coordinates: this.polygone_coordinet, country_id: this.selected_country._id })
-        .subscribe(
-          response => {
-            this.zones.push(response)
-            // this.getAllZone()
-            console.log("thise is save btn zones:", this.zones)
-            console.log('Zone created successfully:', response);
-            this.toastr.success("city added successfull")
-            this.resetAutocomplete()
-          },
-          error => {
-            console.error('Error creating zone:', error);
-            this.toastr.error('Failed to create zone. Please try again later.');
-          }
-        );
-      console.log("this is zones data : ", this.zones)
+      this.CityService.createZone({
+        name: this.selected_city,
+        coordinates: this.polygone_coordinet,
+        country_id: this.selected_country._id
+      }).subscribe(
+        response => {
+          this.zones.push(response);
+          console.log('Zone created successfully:', response);
+          this.toastr.success('City added successfully');
+          this.initMap();
+          this.resetAutocomplete();
+        },
+        error => {
+          console.error('Error creating zone:', error);
+          this.toastr.error('Failed to create zone. Please try again later.');
+        }
+      );
     }
   }
+
+
   //////////////////////////////////////////////////////////////////////
   getAllZone() {
     this.CityService.getAllZone().subscribe((getAllZone) => {
@@ -224,10 +270,15 @@ export class CityComponent implements OnInit {
   selectedZone: Zone | null = null;
 
   selectZone(zone: Zone) {
+  // selectZone(zone: any) {
+    this.isDissSavebtn=true
+    this.isDissUpdatebtn=false
     this.selectedZone = zone;
     console.log("it is selected zone(btn)", this.selectedZone)
-    console.log(zone.coordinates)
-    this.drawPolygon(zone.coordinates);
+    console.log(zone.coordinates.coordinates)
+    // this.drawPolygon(zone.coordinates);
+    this.drawPolygon(zone.coordinates.coordinates);
+    // console.log("aaa",zone.coordinates.coordinates)
     this.currentPolygon?.setMap(null)
     this.currentPolygon = null
     console.log(this.currentPolygon)
@@ -241,11 +292,54 @@ export class CityComponent implements OnInit {
     }
   }
   /////////////////////////////////////////////////////////////////////////
-  drawPolygon(coordinates: google.maps.LatLng[]): void {
-    this.clearPolygon()
+  // drawPolygon(coordinates: google.maps.LatLng[]): void {
+  // drawPolygon(coordinates: number[][][]): void {
+  //   this.clearPolygon()
+  //   // Create a new polygon for the selected zone
+  //   this.polygon = new google.maps.Polygon({
+  //     paths: coordinates,
+  //     strokeColor: 'green',
+  //     strokeOpacity: 0.8,
+  //     strokeWeight: 2,
+  //     fillColor: 'green',
+  //     fillOpacity: 0.35,
+  //     editable: true,
+  //     draggable: true,
+  //     map: this.map
+  //   });
+  //   // Add event listener for polygon edit
+  //   if (this.polygon !== null) {
+  //     google.maps.event.addListener(this.polygon.getPath(), 'set_at', () => {
+  //       // When a vertex is moved (dragged) in the polygon
+  //       console.log('Polygon edited - new coordinates:');
+  //       const coordinates: google.maps.LatLng[] = this.polygon!.getPath().getArray();
+  //       // this.polygone_coordinet = coordinates
+  //       this.polygone_coordinet = {
+  //         type: 'Polygon',
+  //         coordinates: [coordinates.map(latLng => [latLng.lng(), latLng.lat()])]
+  //       };
+  //     });
+  //   }
+  //   console.log("new coordinats : ", this.polygone_coordinet)
+
+  //   // Fit the map bounds to the polygon's bounds
+  //   const bounds = new google.maps.LatLngBounds();
+  //   coordinates.forEach((coordinate) => {
+  //     bounds.extend(coordinate);
+  //   });
+  //   this.map.fitBounds(bounds);
+  // }
+
+  // ////////////////////////////////
+  drawPolygon(coordinates:number[][][]): void {
+    this.clearPolygon();
+  
+    const paths = coordinates.map(ring => ring.map(coord => ({ lat: coord[1], lng: coord[0] })));
     // Create a new polygon for the selected zone
     this.polygon = new google.maps.Polygon({
-      paths: coordinates,
+      // paths: coordinates,
+      paths:paths,
+      
       strokeColor: 'green',
       strokeOpacity: 0.8,
       strokeWeight: 2,
@@ -255,24 +349,48 @@ export class CityComponent implements OnInit {
       draggable: true,
       map: this.map
     });
+  
     // Add event listener for polygon edit
     if (this.polygon !== null) {
+
       google.maps.event.addListener(this.polygon.getPath(), 'set_at', () => {
         // When a vertex is moved (dragged) in the polygon
         console.log('Polygon edited - new coordinates:');
-        const coordinates: google.maps.LatLng[] = this.polygon!.getPath().getArray();
-        this.polygone_coordinet = coordinates
+        const updatedCoordinates: google.maps.LatLng[] = this.polygon!.getPath().getArray();
+        this.polygone_coordinet = {
+          type: 'Polygon',
+          coordinates: [updatedCoordinates.map(latLng => [latLng.lng(), latLng.lat()])]
+        };
       });
-    }
-    console.log("new coordinats : ", this.polygone_coordinet)
 
-    // Fit the map bounds to the polygon's bounds
-    const bounds = new google.maps.LatLngBounds();
-    coordinates.forEach((coordinate) => {
-      bounds.extend(coordinate);
-    });
-    this.map.fitBounds(bounds);
+      google.maps.event.addListener(this.polygon.getPath(), 'insert_at', () => {
+        // When a vertex is moved (dragged) in the polygon
+        console.log('Polygon edited - new coordinates:');
+        const updatedCoordinates: google.maps.LatLng[] = this.polygon!.getPath().getArray();
+        this.polygone_coordinet = {
+          type: 'Polygon',
+          coordinates: [updatedCoordinates.map(latLng => [latLng.lng(), latLng.lat()])]
+        };
+      });
+
+      google.maps.event.addListener(this.polygon.getPath(), 'remove_at', () => {
+        // When a vertex is moved (dragged) in the polygon
+        console.log('Polygon edited - new coordinates:');
+        const updatedCoordinates: google.maps.LatLng[] = this.polygon!.getPath().getArray();
+        this.polygone_coordinet = {
+          type: 'Polygon',
+          coordinates: [updatedCoordinates.map(latLng => [latLng.lng(), latLng.lat()])]
+        };
+      });
+
+      // focus on map
+      const bounds = new google.maps.LatLngBounds();
+      paths.forEach(path => path.forEach(coord => bounds.extend(coord)));
+      this.map.fitBounds(bounds);
+
+    }
   }
+  // ////////////////////////////////
 
   updateZone(): void {
     if (this.selectedZone && this.selectedZone._id) {
@@ -289,6 +407,8 @@ export class CityComponent implements OnInit {
             this.zones[index].coordinates = updatedCoordinates;
           }
           this.toastr.success('Zone updated successfully');
+          this.initMap()
+          this.isDissUpdatebtn=true
         },
         (error) => {
           console.error('Error updating zone:', error);

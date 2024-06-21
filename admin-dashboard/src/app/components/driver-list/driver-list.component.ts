@@ -15,6 +15,8 @@ import { Driver, DriverServiceType, FatchDriver, UserSearchResponse } from '../.
 import { VehicleType } from '../../models/vihicle-type';
 import { Zone } from '../../models/zone';
 import { Country } from '../../models/country';
+import { SocketService } from '../../services/socket.service';
+import { ThisReceiver } from '@angular/compiler';
 
 @Component({
   selector: 'app-driver-list',
@@ -37,7 +39,7 @@ export class DriverListComponent implements OnInit {
 
   currentPage: number = 1;
   totalItems: number = 0;
-  itemsPerPage: number = 3;
+  itemsPerPage: number = 4;
 
   search_query: string = '';
   cities: Zone[] = [];
@@ -46,13 +48,12 @@ export class DriverListComponent implements OnInit {
   selectVehicleName: string = '';
 
   constructor(
-    private _AuthService: AuthService,
     private fb: FormBuilder,
     private DriverListService: DriverListService,
     private countryService: CountryService,
     private toastrService: ToastrService,
-    private CityService: CityService,
     private VehicleService: VehicleService,
+    private SocketService:SocketService
   ) {
     this.userProfileForm = this.fb.group({
       profilePic: ['', Validators.required],
@@ -68,9 +69,11 @@ export class DriverListComponent implements OnInit {
   ngOnInit(): void {
     // this._AuthService.sessionOut();
     this.fetchCountries();
-    this.fetchCities()
+    // this.fetchCities()
     this.fetchDriverData();
     this.fetchVehicle();
+    this.getDriverStatus()
+    this.getDriverService()
 
   }
   btn_name_chenge() {
@@ -84,11 +87,31 @@ export class DriverListComponent implements OnInit {
       this.countries = countries;
     });
   }
-  fetchCities(): void {
-    this.CityService.getAllZone().subscribe(cities => {
-      this.cities = cities;
-      console.log("it is city:", this.cities)
-    });
+  // fetchCities(): void {
+  //   this.CityService.getAllZone().subscribe(cities => {
+  //     this.cities = cities;
+  //     console.log("it is city:", this.cities)
+  //   });
+  // }
+  fetchCity(event: Event) {
+    const target = event.target as HTMLSelectElement;
+    const selectedCountryId = target.value;
+    if (target.value != "") {
+      this.DriverListService.fatchCity(selectedCountryId).subscribe(
+        (response)=>{
+          this.cities=response.cities
+          console.log(response.cities)
+        }
+      )
+      console.log('Selected Country:', selectedCountryId);
+    }else{
+      this.cities=[]
+    }
+    // const selectedCountry = this.countries.find(country => country._id === selectedCountryId);
+    // if (selectedCountry) {
+      // Fetch the cities based on the selected country
+      // ...
+    // }
   }
   fetchVehicle(): void {
     this.VehicleService.getAllVehicles().subscribe(vehicles => {
@@ -125,6 +148,7 @@ export class DriverListComponent implements OnInit {
     this.userProfileForm.reset();
     this.profilePic = null;
     this.fileInput.nativeElement.value = '';
+    this.cities=[]
   }
 
   fetchDriverData(): void {
@@ -175,6 +199,14 @@ export class DriverListComponent implements OnInit {
       email: driver.email,
       phone: driver.phone
     });
+    //fetch city automatic when edit click
+    this.countries = this.countries.filter(c => c._id === driver.countryId);
+    this.DriverListService.fatchCity(driver.countryId).subscribe(
+      (response)=>{
+        this.cities=response.cities
+        console.log(response.cities)
+      }
+    )
   }
 
   updateDriver() {
@@ -279,7 +311,7 @@ export class DriverListComponent implements OnInit {
       }
     );
   }
-
+  
   onVehicleSelectionChange(event: Event): void {
     const target = event.target as HTMLInputElement;
     if (target) {
@@ -287,6 +319,9 @@ export class DriverListComponent implements OnInit {
       console.log(this.selectVehicleId)
     }
   }
+
+  // --------------service update using socket
+
   saveService() {
     const serviceId = this.selectVehicleId;
     this.DriverListService.addService(this.currentDriverId, serviceId).subscribe((driver:DriverServiceType) => {
@@ -304,7 +339,26 @@ export class DriverListComponent implements OnInit {
 
       }
     });
+// --------------------socket
+    // this.SocketService.updatedriverService(this.currentDriverId,serviceId)
+    // over---------------------
   }
+  getDriverService(){
+    
+    this.SocketService.onUpdateServiceData().subscribe({
+      next: (response) => {
+        
+        this.fetchDriverData();
+        this.toastrService.success(response.message);
+      },
+    error: (error: any) => {
+        console.log(error);
+        this.toastrService.error(error.error.message)
+      }
+  })
+  }
+
+
   isSelected(vehicleId: string): boolean {
     return vehicleId === this.selectVehicleId;
     // return vehicleId === 'non';
@@ -317,7 +371,12 @@ export class DriverListComponent implements OnInit {
       this.selectVehicleId = selectDriver.serviceID
     }
   }
-  approveDecline() {
+
+  // --------------status update using socket
+
+  approveDecline(driver:any) {
+    const status = !driver.status;
+    console.log(status,driver._id)
     this.DriverListService.addStatus(this.currentDriverId).subscribe(
       (response:DriverServiceType) => {
         console.log(response)
@@ -329,6 +388,7 @@ export class DriverListComponent implements OnInit {
           }
         }
         console.log(this.allUsers)
+    // this.SocketService.updatedriverStatus(this.currentDriverId,status)
       },
       (error) => {
         console.error(error);
@@ -336,4 +396,49 @@ export class DriverListComponent implements OnInit {
       }
     );
   }
+  getDriverStatus(){
+    
+    this.SocketService.onUpdateStatusData().subscribe({
+      next: (response) => {
+        
+        this.fetchDriverData();
+        this.toastrService.success(response.message,  'Success');
+      },
+    error: (error: any) => {
+        console.log(error);
+        this.toastrService.error(error.error.message)
+      }
+  })
+  }
+
+
+  // add bank acc
+
+  accountHolderName: string='testAccount'
+  routingNumber: string='110000000'
+  accountNumber: string='000123456789'
+ driver_id!:string;
+
+  addBankAccount() {
+
+    const bankAccountData = {
+      accountHolderName: this.accountHolderName,
+      routingNumber: this.routingNumber,
+      accountNumber: this.accountNumber
+    };
+
+    this.DriverListService.addBankAccount(this.currentDriverId, bankAccountData).subscribe(
+      (response) => {
+        console.log(response);
+        this.toastrService.success(response.message)
+        // Handle success, e.g., show success message
+      },
+      (error) => {
+        console.error(error);
+        console.log(error)
+      }
+    );
+  }
+
+
 }

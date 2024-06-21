@@ -1,5 +1,5 @@
 <!-- Button trigger modal -->
-<div class="container-fluid d-grid mb-2">
+<div class="container-fluid d-grid mb-2  pt-5 ">
   <button type="button" class="btn btn-secondary mt-2" data-bs-toggle="modal" data-bs-target="#exampleModal"
     (click)="btn_name_chenge(); resetForm()">
     ADD USER
@@ -184,7 +184,7 @@
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="staticBackdropLabel">Card Detail</h5>
+        <h3 class="modal-title" id="staticBackdropLabel"><b>Card Detail</b></h3>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
@@ -194,7 +194,7 @@
         </div>
       </div>
       <!-- table -->
-      <table class="table">
+      <table class="table-responsive m-4">
         <thead>
           <tr>
             <th>Set Default</th>
@@ -202,7 +202,7 @@
             <th>Last 4 Digits</th>
             <th>Expiration Month</th>
             <th>Expiration Year</th>
-            <th>Actions/th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -215,17 +215,15 @@
             </td>
             <td>
 
-              <img *ngIf="card.brand === 'Visa'" src="https://img.icons8.com/color/48/000000/visa.png" alt="Visa">
+              <img *ngIf="card.brand === 'Visa'" src="../../../assets/cardImage/visa.png" alt="Visa">
 
-              <img *ngIf="card.brand === 'MasterCard'"  src="https://img.icons8.com/color/48/000000/mastercard.png" alt="MasterCard">
+              <img *ngIf="card.brand === 'MasterCard'"  src="../../../assets/cardImage/master.png" alt="MasterCard">
 
               <img *ngIf="card.brand === 'American Express'"
-                src="https://img.icons8.com/color/48/000000/american-express.png" alt="American Express">
+                src="../../../assets/cardImage/AmericanExpress.png" alt="American Express"style="width: 42px; height: 30px;">
 
-              <img *ngIf="card.brand === 'Discover'" src="https://img.icons8.com/color/48/000000/discover.png"
+              <img *ngIf="card.brand === 'Discover'" src="../../../assets/cardImage/discover.png"
                 alt="Discover">
-
-
 
             </td>
             <td>{{ card.last4 }}</td>

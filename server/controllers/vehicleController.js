@@ -6,6 +6,11 @@ const deleteImage = require('../middleware/deleteImage');
 exports.addVehicle = async (req, res) => {
     try {
         const { name } = req.body;
+        const existingVehicle = await Vehicle.findOne({ name });
+        if (existingVehicle) {
+            return res.status(400).json({ success: false, message: "Vehicle with the same name already exists" });
+        }
+
         const icon = req.file.filename;
             const vehicle = new Vehicle({ name, icon });
             await vehicle.save();
@@ -30,6 +35,12 @@ exports.editVehicle = async (req, res) => {
     try {
         const { id } = req.params;
         const { name } = req.body;
+        
+        const existingVehicle = await Vehicle.findOne({ name, _id: { $ne: id } });
+        if (existingVehicle) {
+            return res.status(400).json({ success: false, message: "Vehicle with the same name already exists" });
+        }
+
         let icon = null;
         if (req.file) {
             const oldIcon = await Vehicle.findById(id);
