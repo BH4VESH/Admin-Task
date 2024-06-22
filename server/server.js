@@ -37,7 +37,12 @@ mongoose.connect(process.env.mongo_path)
   .then(() => console.log('MongoDB Connected'))
   .catch(err => console.log(err));
 
-app.use(cors());
+  const corsOptions = {
+    origin: 'http://localhost:4200',
+    optionsSuccessStatus: 200
+  };
+
+app.use(cors(corsOptions));
 app.use(bodyParser.json());
 
 // const JWT_SECRET = 'secret_key'; 
