@@ -219,8 +219,15 @@ export class RideHistoryComponent implements OnInit {
   }
 
   // drow path
+  marker:any=[]
   drawPath(from: string, to: string, stops: string[]): void {
     let markerIndex = 1;
+
+    if (this.polyline) {
+      this.polyline.setMap(null);
+    }
+    this.clearMarkers();
+
     this.geocodeAddress(from, (originCoords) => {
       if (!originCoords) {
         console.error('Geocoding origin address failed');
@@ -297,12 +304,17 @@ export class RideHistoryComponent implements OnInit {
   }
 
   placeMarker(position: google.maps.LatLng, title: string, index: number): void {
-    new google.maps.Marker({
+   let marker= new google.maps.Marker({
       position: position,
       map: this.map,
       title: title,
       label: index.toString() 
     });
+    this.marker.push(marker)
+  }
+  clearMarkers() {
+    this.marker.forEach((mark: google.maps.Marker) => mark.setMap(null));
+    this.marker = [];
   }
 
 // downloads-csv
