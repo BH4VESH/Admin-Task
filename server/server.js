@@ -33,7 +33,10 @@ const port = process.env.port;
 // mongoose.connect(process.env.mongo_path)
 //   .then(() => console.log('MongoDB Connected'))
 //   .catch(err => console.log(err));
-mongoose.connect(process.env.mongo_path)
+mongoose.connect(process.env.mongo_path,{
+  serverSelectionTimeoutMS: 30000, // 30 seconds timeout
+  socketTimeoutMS: 45000, // 45 seconds timeout
+})
   .then(() => console.log('MongoDB Connected'))
   .catch(err => console.log(err));
 
