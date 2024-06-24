@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { rideDetails,feedback} from '../models/rideHistory';
+import { environment } from '../../environments/environment.development';
 
 @Injectable({
   providedIn: 'root'
@@ -10,7 +11,7 @@ export class RideHistoryService {
   
   constructor(private http: HttpClient) { }
 
-  private baseUrl = 'http://localhost:3000/ridehistory';
+  private baseUrl = `${environment.apiUrl}/ridehistory`;
 
   getRideList(page: number, limit: number): Observable<rideDetails> {
     return this.http.get<any>(`${this.baseUrl}/getRideList?page=${page}&limit=${limit}`);

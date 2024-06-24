@@ -2,12 +2,13 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Setting } from '../models/setting';
+import { environment } from '../../environments/environment.development';
 
 @Injectable({
   providedIn: 'root'
 })
 export class SettingService {
-  private baseUrl = 'http://localhost:3000/setting';
+  private baseUrl = `${environment.apiUrl}/setting`;
 
   constructor(private http: HttpClient) {}
   saveSetting(selectedSeconds: number, selectedStopCount: number,settings: any): Observable<Setting> {

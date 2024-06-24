@@ -3,6 +3,8 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, Subject, catchError, tap, throwError } from 'rxjs';
 import {Driver, DriverServiceType, FatchDriver, UserSearchResponse, fetchCity} from '../models/driver';
+import { environment } from '../../environments/environment.development';
+
 
 
 
@@ -23,7 +25,7 @@ interface BankAccountResponse {
 })
 export class DriverListService {
 
-  private baseUrl = 'http://localhost:3000/driverlist';
+  private baseUrl = `${environment.apiUrl}/driverlist`;
   userAdded = new Subject<void>();
 
   constructor(private http: HttpClient) { }

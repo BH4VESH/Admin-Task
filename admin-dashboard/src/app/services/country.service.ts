@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Country } from '../models/country';
+import { environment } from '../../environments/environment.development';
 
 
 @Injectable({
@@ -21,10 +22,10 @@ export class CountryService {
 
   // database
   addCountry(country: Country): Observable<Country> {
-    return this.http.post<Country>('http://localhost:3000/countrys/add', country);
+    return this.http.post<Country>(`${environment.apiUrl}/countrys/add`, country);
   }
   fatchCountry(): Observable<Country[]> { 
-    return this.http.get<Country[]>('http://localhost:3000/countrys/get');
+    return this.http.get<Country[]>(`${environment.apiUrl}/countrys/get`);
   }
   
 

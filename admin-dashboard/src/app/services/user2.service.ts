@@ -2,13 +2,14 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, Subject, catchError, tap, throwError } from 'rxjs';
 import { User,UserSearchResponse,FatchUser, SortResponce } from '../models/user';
+import { environment } from '../../environments/environment.development';
 
 @Injectable({
   providedIn: 'root'
 })
 export class User2Service {
 
-  private baseUrl = 'http://localhost:3000/users';
+  private baseUrl = `${environment.apiUrl}/users`;
   userAdded = new Subject<void>();
 
   constructor(private http: HttpClient) { }

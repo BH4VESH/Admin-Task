@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable, observeOn } from 'rxjs';
 import { Socket, io } from 'socket.io-client';
+import { environment } from '../../environments/environment.development';
 
 @Injectable({
   providedIn: 'root'
@@ -9,7 +10,7 @@ export class SocketService {
   public socket: Socket;
   constructor() {
     // soket conection
-    this.socket = io('http://localhost:3000');
+    this.socket = io(environment.apiUrl);
      // this.socket = io('ws://localhost:3000');
      this.socket.on('connect', () => {
       console.log('7777777777777777777777777777Connected to server77777777777777777.');

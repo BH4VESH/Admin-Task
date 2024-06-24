@@ -2,13 +2,14 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, Subject, tap } from 'rxjs';
 import { VehicleType } from '../models/vihicle-type';
+import { environment } from '../../environments/environment.development';
 
 @Injectable({
   providedIn: 'root'
 })
 export class VehicleService {
 
-  private baseUrl = 'http://localhost:3000/vehicles';
+  private baseUrl = `${environment.apiUrl}/vehicles`;
   vehicleAdded = new Subject<void>();
 
   constructor(private http: HttpClient) { }

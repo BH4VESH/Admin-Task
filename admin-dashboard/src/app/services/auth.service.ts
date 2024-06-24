@@ -7,12 +7,14 @@ import { Router } from '@angular/router';
 import { BnNgIdleService } from 'bn-ng-idle';
 import { ToastrService } from 'ngx-toastr';
 import { Token } from '@angular/compiler';
+import { environment } from '../../environments/environment.development';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private baseUrl = 'http://localhost:3000';
+  // private baseUrl = 'http://localhost:3000';
+  private baseUrl = environment.apiUrl;
   private isAuthenticated: boolean = false;
 
   constructor(private http: HttpClient,private router: Router,private bnIdle: BnNgIdleService,private toster: ToastrService) {}

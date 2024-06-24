@@ -2,12 +2,13 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { fatchRide } from '../models/runningRequest';
+import { environment } from '../../environments/environment.development';
 
 @Injectable({
   providedIn: 'root'
 })
 export class RunningRequestService {
-  private baseUrl = 'http://localhost:3000/runningride';
+  private baseUrl = `${environment.apiUrl}/runningride`;
 
   constructor(private http: HttpClient) { }
 
