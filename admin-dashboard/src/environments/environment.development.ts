@@ -4,7 +4,7 @@
     
 // };
 const PORT = 3000
-const IP = `13.233.196.53`
+const IP = `13.233.110.165`
 // const IP = 'localhost'
 
 export const environment = {
