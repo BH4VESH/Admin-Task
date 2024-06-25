@@ -42,7 +42,7 @@ mongoose.connect(process.env.mongo_path)
     optionsSuccessStatus: 200
   };
 
-app.use(cors(corsOptions));
+app.use(cors());
 app.use(bodyParser.json());
 
 // const JWT_SECRET = 'secret_key'; 
@@ -97,7 +97,7 @@ app.use('/ridehistory',checkAuth,ridedHistoryRoutes);
 
 // for the socket connection
 initializeSocket(http)
-  initializeCronJob();
+  // initializeCronJob();
 
 http.listen(port, () => {
   console.log(`Server is running at http://localhost:${port}`);
