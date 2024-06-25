@@ -14,36 +14,32 @@ async function initializeSocket(server) {
     console.log("Socket is Running.....................");
 
     // notification counter
-    socket.on("counterSend",async ()=>{
-      var counter = await createrideModel.aggregate(
-        [
-          {
-            $group: {
-              _id: null,
-              count: {
-                $sum: "$assigned",
-              },
-            },
-          },
-        ]
-      )
-      console.log(counter)
-      if(counter.length > 0){
-        var counterNew = counter[0].count
-      }
-      if (counterNew <= 0) {
-        counterNew = 0
-      } else {
-        // global.counter--
-        if(counter.length > 0){
-          counterNew = counter[0].count
-        }
-      }
-      io.emit("counterGet", {
-        success: true,
-        counter:counterNew
-      });
-    })
+    socket.on("counterSend", async () => {
+    try {
+        const result = await createrideModel.aggregate([
+            {
+                $group: {
+                    _id: null,
+                    count: { $sum: "$assigned" }
+                }
+            }
+        ]);
+
+        let counterNew = result.length > 0 ? result[0].count : 0;
+
+        io.emit("counterGet", {
+            success: true,
+            counter: counterNew
+        });
+    } catch (error) {
+        console.error("Error in counterSend event:", error);
+        io.emit("counterGet", {
+            success: false,
+            error: "An error occurred while fetching the counter."
+        });
+    }
+});
+
 
     // initializeCronJob();
 
